@@ -8,23 +8,27 @@ Simple IoT Server, Configuration Tool & Dashboard
  - Git
  - Mosquitto
  - SQLite
+ - spatialite-tools
+ - gdal
+
+For more information on install spatialite see: https://docs.djangoproject.com/en/3.2/ref/contrib/gis/install/spatialite/
 
 ## Installation
 
 ```bash
-git clone git@github.com:hacklabza/iotserver.git
-cd iotserver/
+$ git clone git@github.com:hacklabza/iotserver.git
+$ cd iotserver/
 
 # Create a virtualenv or use pyenv
-python3 -m venv ve
-. ve/bin/activate
+$ python3 -m venv ve
+$ . ve/bin/activate
 
 # Install the requirements
-pip install -r requirments.txt
+$ pip install -r requirments.txt
 
 # Run the server to test your installation
-./manage.py migrate
-./manage.py runserver
+$ ./manage.py migrate
+$ ./manage.py runserver
 ```
 
 ## Getting Started
