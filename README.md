@@ -23,6 +23,7 @@ python3 -m venv ve
 pip install -r requirments.txt
 
 # Run the server to test your installation
+./manage.py migrate
 ./manage.py runserver
 ```
 
