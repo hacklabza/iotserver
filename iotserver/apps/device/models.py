@@ -30,8 +30,10 @@ class Device(models.Model):
     name = models.CharField(max_length=128)
     description = models.CharField(max_length=1024)
 
-    type = models.ForeignKey(DeviceType, on_delete=models.SET_NULL, null=True)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
+    type = models.ForeignKey(
+        DeviceType, on_delete=models.SET_NULL, null=True, related_name='devices'
+    )
+    location = models.OneToOneField(Location, on_delete=models.SET_NULL, null=True)
 
     ip_address = models.GenericIPAddressField(null=True)
     mac_address = models.CharField(max_length=48)
