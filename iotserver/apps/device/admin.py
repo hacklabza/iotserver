@@ -20,10 +20,18 @@ class DeviceModelAdmin(admin.ModelAdmin):
             },
         ),
     )
-    list_display = ('name', 'description', 'active', 'type', 'location', 'ip_address')
+    list_display = (
+        'name',
+        'description',
+        'active',
+        'created_at',
+        'type',
+        'location',
+        'ip_address',
+    )
     list_filter = ('active', 'type__name', 'location__name')
 
 
 @admin.register(models.Location)
 class LocationModelAdmin(admin.ModelAdmin):
-    list_display = ('name', '')
+    list_display = ('name', 'coordinates')
