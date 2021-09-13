@@ -24,11 +24,22 @@ $ python3 -m venv ve
 $ . ve/bin/activate
 
 # Install the requirements
-$ pip install -r requirments.txt
+$ pip install -r requirements.txt
 
 # Run the server to test your installation
 $ ./manage.py migrate
 $ ./manage.py runserver
+```
+
+## Testing
+
+```bash
+
+# Install the requirements
+$ pip install -r requirements.test.txt
+
+# Run the tests
+$ pytest
 ```
 
 ## Getting Started
