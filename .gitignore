@@ -1,0 +1,42 @@
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
+# testing
+coverage.xml
+pep8.txt
+.tox/
+.coverage
+.pytest_cache
+
+# production
+build/
+/docs/_build
+dist/
+backups/
+ve/
+
+# database
+*.sqlite3
+*.db
+
+# media
+/media/uploads/
+/media/downloads/
+/static/
+
+# misc
+*.swp
+*.pyc
+*.egg-info
+*.swo
+__pycache__
+.DS_Store
+celerybeat-schedule
+.vscode
+.editorconfig
+.tags
+.tags_swap
+.idea/
+.AppleDouble/
+.env
+.venv
+.keys/
