@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     # 3rd party apps
     'rest_framework',
+    'rest_framework.authtoken',
     # Project specific apps
     'iotserver.apps.device',
 ]
@@ -98,7 +99,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions']
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
 }
 
 
