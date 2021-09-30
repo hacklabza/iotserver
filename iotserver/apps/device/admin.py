@@ -32,6 +32,12 @@ class DeviceModelAdmin(admin.ModelAdmin):
     list_filter = ('active', 'type__name', 'location__name')
 
 
+@admin.register(models.DeviceStatus)
+class DeviceStatusModelAdmin(admin.ModelAdmin):
+    list_display = ('device', 'created_at')
+    list_filter = ('device__name', 'created_at')
+
+
 @admin.register(models.Location)
 class LocationModelAdmin(admin.ModelAdmin):
     list_display = ('name', 'coordinates')

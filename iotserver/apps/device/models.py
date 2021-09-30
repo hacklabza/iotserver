@@ -43,3 +43,19 @@ class Device(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class DeviceStatus(models.Model):
+    device = models.ForeignKey(
+        Device, on_delete=models.CASCADE, related_name='statuses'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    status = models.JSONField(null=False)
+
+    class Meta:
+        verbose_name_plural = 'Device Statuses'
+
+    def __str__(self):
+        return self.name
