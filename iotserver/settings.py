@@ -32,7 +32,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     # 3rd party apps
+    'mapwidgets',
     'rest_framework',
+    'rest_framework_gis',
     'rest_framework.authtoken',
     # Project specific apps
     'iotserver.apps.device',
@@ -77,6 +79,15 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.spatialite',
         'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# Cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+        'TIMEOUT': (60 * 15),  # 15 mins
     }
 }
 
@@ -129,3 +140,30 @@ STATIC_URL = '/static/'
 
 # SpartialLite config
 SPATIALITE_LIBRARY_PATH = os.environ.get('IOTSERVER_SPATIALITE_PATH')
+
+# Integration config
+INTEGRATIONS = {
+    'weather': {
+        'url': os.environ.get(
+            'IOTSERVER_OPENWEATHER_URL',
+            'https://api.openweathermap.org/data/2.5/onecall',
+        ),
+        'api_key': os.environ.get('IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'),
+    }
+}
+
+# GIS config
+MAP_WIDGETS = {
+    'GooglePointFieldWidget': (
+        ('zoom', 15),
+        ('mapCenterLocation', [-26.190, 28.050]),
+        (
+            'GooglePlaceAutocompleteOptions',
+            {'componentRestrictions': {'country': 'za'}},
+        ),
+        ('markerFitZoom', 12),
+    ),
+    'GOOGLE_MAP_API_KEY': os.environ.get(
+        'IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'
+    ),
+}
