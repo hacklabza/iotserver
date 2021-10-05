@@ -34,12 +34,7 @@ $ ./manage.py runserver
 ## Testing
 
 ```bash
-
-# Install the requirements
-$ pip install -r requirements.test.txt
-
-# Run the tests
-$ pytest
+$ make test
 ```
 
 ## Getting Started
