@@ -36,4 +36,5 @@ deps: $(venv)
 # Run unittest suite.
 test: $(VENV)
 	@echo "$(CYAN)Running unittests...$(CLEAR)"
-	$(PYTEST) iotserver
+	coverage run -m pytest iotserver
+	coverage report -m

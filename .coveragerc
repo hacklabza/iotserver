@@ -1,0 +1,13 @@
+[run]
+branch = True
+source =
+    iotserver
+omit =
+    *migrations*
+    *tests*
+    *asgi*
+    *wsgi*
+    *apps.py
+
+[report]
+show_missing = True
