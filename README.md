@@ -2,6 +2,8 @@
 
 Simple IoT Server, Configuration Tool & Dashboard
 
+[![Build Status](https://app.travis-ci.com/hacklabza/iotdevice.svg?branch=develop)](https://app.travis-ci.com/hacklabza/iotdevice)
+
 ## Requirements
 
  - Python 3.9+
