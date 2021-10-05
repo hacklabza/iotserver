@@ -2,7 +2,7 @@
 
 Simple IoT Server, Configuration Tool & Dashboard
 
-[![Build Status](https://app.travis-ci.com/hacklabza/iotdevice.svg?branch=develop)](https://app.travis-ci.com/hacklabza/iotdevice)
+[![Build Status](https://app.travis-ci.com/hacklabza/iotserver.svg?branch=develop)](https://app.travis-ci.com/hacklabza/iotserver)
 
 ## Requirements
 
