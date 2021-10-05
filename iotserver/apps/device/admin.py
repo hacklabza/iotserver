@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.gis.db import models as gis_models
+from mapwidgets.widgets import GooglePointFieldWidget
 
 from iotserver.apps.device import models
 
@@ -40,4 +42,5 @@ class DeviceStatusModelAdmin(admin.ModelAdmin):
 
 @admin.register(models.Location)
 class LocationModelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'coordinates')
+    formfield_overrides = {gis_models.PointField: {'widget': GooglePointFieldWidget}}
+    list_display = ('name', 'position')

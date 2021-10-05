@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_gis import serializers as gis_serializers
 
 from iotserver.apps.device import models
 
@@ -16,6 +17,9 @@ class DeviceSerializer(serializers.HyperlinkedModelSerializer):
     location = serializers.HyperlinkedRelatedField(
         many=False, read_only=True, view_name='location-detail'
     )
+    statuses = serializers.HyperlinkedRelatedField(
+        many=True, read_only=True, view_name='devicestatus-detail'
+    )
 
     class Meta:
         model = models.Device
@@ -23,7 +27,18 @@ class DeviceSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field = 'id'
 
 
-class LocationSerializer(serializers.HyperlinkedModelSerializer):
+class DeviceStatusSerializer(serializers.HyperlinkedModelSerializer):
+    device = serializers.HyperlinkedRelatedField(
+        many=False, read_only=True, view_name='device-detail'
+    )
+
+    class Meta:
+        model = models.DeviceStatus
+        fields = '__all__'
+
+
+class LocationSerializer(gis_serializers.GeoModelSerializer):
     class Meta:
         model = models.Location
+        geo_field = 'position'
         fields = '__all__'

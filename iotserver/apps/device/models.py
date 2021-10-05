@@ -6,7 +6,7 @@ from django.db import models
 
 class Location(models.Model):
     name = models.CharField(max_length=32)
-    coordinates = gis_models.PointField()
+    position = gis_models.PointField()
 
     def __str__(self):
         return self.name
@@ -58,4 +58,4 @@ class DeviceStatus(models.Model):
         verbose_name_plural = 'Device Statuses'
 
     def __str__(self):
-        return self.name
+        return self.device.name
