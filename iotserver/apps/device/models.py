@@ -35,7 +35,7 @@ class Device(models.Model):
     )
     location = models.OneToOneField(Location, on_delete=models.SET_NULL, null=True)
 
-    ip_address = models.GenericIPAddressField(null=True)
+    ip_address = models.GenericIPAddressField()
     mac_address = models.CharField(max_length=48)
     hostname = models.CharField(max_length=64)
 

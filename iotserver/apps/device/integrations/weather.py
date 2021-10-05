@@ -9,6 +9,8 @@ from django.core.cache import cache
 
 @dataclass
 class Location:
+    """Location dataclass"""
+
     latitude: float
     longitude: float
 
@@ -17,6 +19,14 @@ class Location:
 
 
 class Weather(object):
+    """Weather integration class which gets, caches and provides current and
+    forecast weather for a specific location.
+
+    Args:
+        object (Location): The location (latitude & longitude) to get weather
+        data for.
+    """
+
     def __init__(self, location: Location) -> None:
         self.location = location
         self.config = settings.INTEGRATIONS['weather']
