@@ -67,3 +67,48 @@ class TestLocationViewset(object):
         assert response.status_code == 200, response.json()
         assert return_data['name'] == location_data['name']
         assert return_data['position'] == location_data['position']
+
+
+@pytest.mark.django_db
+class TestDeviceTypeViewset(object):
+    root_url = '/api/devices/types/'
+
+    def test_list(self, api_client):
+        device_type = device_factories.DeviceTypeFactory()
+        response = api_client.get(self.root_url)
+        return_data = response.json()
+
+        assert response.status_code == 200
+        assert len(return_data) == 1
+
+        assert return_data[0]['name'] == device_type.name
+        assert str(device_type.pk) in return_data[0]['url']
+
+    def test_detail(self, api_client):
+        device_type = device_factories.DeviceTypeFactory()
+        response = api_client.get(f'{self.root_url}{device_type.pk}/')
+        return_data = response.json()
+
+        assert response.status_code == 200
+        assert return_data['name'] == device_type.name
+        assert str(device_type.pk) in return_data['url']
+
+    def test_create(self, api_client):
+        device_type_data = {'name': 'Test Type'}
+        response = api_client.post(f'{self.root_url}', device_type_data, format='json')
+        return_data = response.json()
+
+        assert response.status_code == 201
+        assert return_data['name'] == device_type_data['name']
+
+    def test_update(self, api_client):
+        device_type = device_factories.DeviceTypeFactory()
+        device_type_data = {'name': 'Test Type'}
+        response = api_client.put(
+            f'{self.root_url}{device_type.pk}/', device_type_data, format='json'
+        )
+        return_data = response.json()
+
+        assert response.status_code == 200, response.json()
+        assert return_data['name'] == device_type_data['name']
+        assert str(device_type.pk) in return_data['url']
