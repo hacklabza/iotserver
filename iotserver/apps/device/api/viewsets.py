@@ -14,6 +14,11 @@ class DeviceViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DeviceSerializer
 
 
+class DevicePinViewSet(viewsets.ModelViewSet):
+    queryset = models.DevicePin.objects.all()
+    serializer_class = serializers.DevicePinSerializer
+
+
 class DeviceStatusViewSet(viewsets.ModelViewSet):
     queryset = models.DeviceStatus.objects.all()
     serializer_class = serializers.DeviceStatusSerializer

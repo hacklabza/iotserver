@@ -1,5 +1,6 @@
 import factory.fuzzy
 from django.contrib.gis.geos import Point
+from django.utils.text import slugify
 
 from iotserver.apps.device import models
 
@@ -26,6 +27,7 @@ class DeviceFactory(factory.django.DjangoModelFactory):
     active = True
     name = factory.fuzzy.FuzzyText(length=12)
     description = factory.fuzzy.FuzzyText(length=48)
+
     type = factory.SubFactory(DeviceTypeFactory)
     location = factory.SubFactory(LocationFactory)
 
@@ -34,6 +36,22 @@ class DeviceFactory(factory.django.DjangoModelFactory):
     hostname = 'test-device'
 
     config = {}
+
+
+class DevicePinFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.DevicePin
+
+    device = factory.SubFactory(DeviceFactory)
+
+    name = factory.fuzzy.FuzzyText(length=12)
+    identifier = factory.LazyAttribute(lambda obj: slugify(obj.name))
+    pin_number = factory.fuzzy.FuzzyInteger(1, high=32)
+
+    analog = factory.fuzzy.FuzzyChoice([True, False])
+    read = factory.fuzzy.FuzzyChoice([True, False])
+
+    rule = {}
 
 
 class DeviceStatusFactory(factory.django.DjangoModelFactory):

@@ -41,6 +41,13 @@ class DeviceModelAdmin(admin.ModelAdmin):
     list_filter = ('active', 'type__name', 'location__name')
 
 
+@admin.register(models.DevicePin)
+class DevicePinModelAdmin(admin.ModelAdmin):
+    list_display = ('name', 'identifier', 'pin_number', 'device')
+    list_filter = ('device__name',)
+    prepopulated_fields = {'identifier': ('name',)}
+
+
 @admin.register(models.DeviceStatus)
 class DeviceStatusModelAdmin(admin.ModelAdmin):
     list_display = ('device', 'created_at')
