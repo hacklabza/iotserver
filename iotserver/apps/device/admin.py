@@ -21,6 +21,13 @@ class DeviceModelAdmin(admin.ModelAdmin):
                 'fields': ('ip_address', 'mac_address', 'hostname'),
             },
         ),
+        (
+            'Device config',
+            {
+                'classes': ('collapse',),
+                'fields': ('config',),
+            },
+        ),
     )
     list_display = (
         'name',
