@@ -141,6 +141,12 @@ STATIC_URL = '/static/'
 # SpartialLite config
 SPATIALITE_LIBRARY_PATH = os.environ.get('IOTSERVER_SPATIALITE_PATH')
 
+# MQTT settings
+MQTT = {
+    'host': os.environ.get('IOTSERVER_MQTT_HOST', 'localhost'),
+    'port': os.environ.get('IOTSERVER_MQTT_PORT', 1883),
+}
+
 # Integration config
 INTEGRATIONS = {
     'weather': {

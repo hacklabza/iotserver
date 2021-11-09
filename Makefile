@@ -13,8 +13,9 @@ CYAN=\033[0;36m
 help:
 	@echo "usage: make <target>"
 	@echo "    $(CYAN)venv$(CLEAR): Initialises the virtualenv and activates it."
-	@echo "    $(CYAN)build-dev$(CLEAR): Installs the python deps."
-	@echo "    $(CYAN)install$(CLEAR): Installs arnold on the raspberrypi."
+	@echo "    $(CYAN)runserver$(CLEAR): Runs the django development server."
+	@echo "    $(CYAN)runmqtt$(CLEAR): Runs the mqtt client."
+	@echo "    $(CYAN)deps$(CLEAR): Installs the python deps."
 	@echo "    $(CYAN)test$(CLEAR): Run unittest suite."
 
 # Initialises the virtualenv and activates it.
@@ -25,6 +26,16 @@ venv:
 	. $(VENV)/bin/activate
 	cd .
 	@echo "$(GREEN)DONE$(CLEAR)"
+
+# Runs the django development server
+runserver:
+	@echo "$(CYAN)Running django server...$(CLEAR)"
+	python3 manage.py runserver
+
+# Runs the mqtt client
+runmqtt:
+	@echo "$(CYAN)Running mqtt client...$(CLEAR)"
+	python3 iotserver/mqtt.py
 
 # Installs the python deps.
 deps: $(venv)
