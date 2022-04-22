@@ -8,7 +8,7 @@ charset-normalizer==2.0.6
 click==8.0.1
 coverage==6.0
 distlib==0.3.2
-Django==3.2.7
+Django==3.2.13
 django-map-widgets==0.3.2
 djangorestframework==3.12.4
 djangorestframework-gis==0.17
