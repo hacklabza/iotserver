@@ -19,7 +19,7 @@ def mock_get_response(mocker, mock_requests):
 
 @pytest.fixture
 def location():
-    return Location(latitude=-26.13946, longitude=28.36402)
+    return Location(latitude=-26.12345, longitude=28.54321)
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ class TestWeatherIntegration(object):
     def test_build_url(self, weather):
         url = weather._build_url()
         assert (
-            'https://api.openweathermap.org/data/2.5/onecall?lat=-26.13946&lon=28.36402'
+            'https://api.openweathermap.org/data/2.5/onecall?lat=-26.12345&lon=28.54321'
             in url
         )
 

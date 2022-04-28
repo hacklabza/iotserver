@@ -11,8 +11,6 @@ Simple IoT Server, Configuration Tool & Dashboard
 - PostGIS
 - gdal
 
-For more information on install spatialite see: https://docs.djangoproject.com/en/3.2/ref/contrib/gis/install/spatialite/
-
 ## Installation
 
 ```bash
@@ -20,15 +18,6 @@ $ git clone git@github.com:hacklabza/iotserver.git
 $ cd iotserver/
 pyenv local 3.10.*
 poetry install
-```
-
-If you have issues with sqlite extensions, try this when install python via pyenv:
-
-```bash
-PYTHON_CONFIGURE_OPTS="--enable-loadable-sqlite-extensions" \
-LDFLAGS="-L/usr/local/opt/sqlite/lib" \
-CPPFLAGS="-I/usr/local/opt/sqlite/include" \
-pyenv install 3.10.*
 ```
 
 ### Run the server to test your installation

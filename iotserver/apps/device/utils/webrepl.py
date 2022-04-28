@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+# Original code from https://github.com/micropython/webrepl/blob/master/webrepl_cli.py
+
 import os
 import socket
 import struct
@@ -173,6 +174,26 @@ def get_file(ws, local_file, remote_file):
                 sys.stdout.write('Received %d bytes\r' % cnt)
                 sys.stdout.flush()
     assert read_resp(ws) == 0
+
+
+def get_websocket(host, port, passwd):
+    _socket = socket.socket()
+
+    address_info = socket.getaddrinfo(host, port)
+    address = address_info[0][4]
+
+    _socket.connect(address)
+    client_handshake(_socket)
+
+    web_socket = WebSocket(_socket)
+
+    login(web_socket, passwd)
+    print('Remote WebREPL version:', get_ver(web_socket))
+
+    # Set websocket to send data marked as 'binary'
+    web_socket.ioctl(9, 2)
+
+    return _socket, web_socket
 
 
 def help(rc=0):

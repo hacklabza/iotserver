@@ -16,16 +16,7 @@ class Command(BaseCommand):
     def mqtt_on_message(self, client, userdata, message):
         self.stdout.write(self.style.SUCCESS(f'{message.topic}: {message.payload}'))
         if 'status' in message.topic:
-            device_id = message.topic.split('/')[1]
-            device = Device.objects.get(id=device_id)
-            device_status = DeviceStatus.objects.create(
-                device=device, status=json.loads(message.payload)
-            )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f'Status message received for {device_status.device_id} and processed.'
-                )
-            )
+            self.handle_status_queue(message)
 
     def handle(self, *args, **options):
         client = mqtt.Client()
@@ -37,3 +28,23 @@ class Command(BaseCommand):
         client.loop_forever()
 
         self.stdout.write(self.style.SUCCESS('MQTT Client started...'))
+
+    def handle_status_queue(self, message):
+        device_id = message.topic.split('/')[1]
+        try:
+            device = Device.objects.get(id=device_id)
+        except Device.DoesNotExist:
+            self.stdout.write(
+                self.style.ERROR(
+                    f'Device with id: {device_id} does not exist. Ignoring.'
+                )
+            )
+            return
+        device_status = DeviceStatus.objects.create(
+            device=device, status=json.loads(message.payload)
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'Status message received for {device_status.device_id} and processed.'
+            )
+        )

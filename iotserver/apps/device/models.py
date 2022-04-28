@@ -1,9 +1,14 @@
+import json
 import uuid
 
 from django.contrib.gis.db import models as gis_models
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.functional import cached_property
+
+from iotserver.apps.device.utils import webrepl
 
 
 class Location(models.Model):
@@ -64,6 +69,12 @@ class Device(models.Model):
     def resource_url(self):
         return reverse('device-detail', kwargs={'pk': str(self.id)})
 
+    @cached_property
+    def full_config(self):
+        config = self.config
+        config['pins'] = [pin.config for pin in self.pins.all()]
+        return config
+
 
 class DevicePin(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='pins')
@@ -84,6 +95,17 @@ class DevicePin(models.Model):
     def resource_url(self):
         return reverse('devicepin-detail', kwargs={'pk': self.pk})
 
+    @cached_property
+    def config(self):
+        return {
+            'pin_number': self.pin_number,
+            'name': self.name,
+            'identifier': self.identifier,
+            'analog': self.analog,
+            'read': self.read,
+            'rule': self.rule,
+        }
+
 
 class DeviceStatus(models.Model):
     device = models.ForeignKey(
@@ -103,3 +125,15 @@ class DeviceStatus(models.Model):
     @cached_property
     def resource_url(self):
         return reverse('devicestatus-detail', kwargs={'pk': self.pk})
+
+
+@receiver(post_save, sender=Device)
+def handle_device_config_update(sender, instance, *args, **kwargs):
+    """Update config on the physical device via webrepl."""
+    temp_file_path = f'/tmp/config.{instance.id}.json'
+    with open(temp_file_path, 'w') as input_file:
+        input_file.write(json.dumps(instance.full_config, indent=4))
+
+    _socket, web_socket = webrepl.get_websocket(instance.ip_address, 8266, None)
+    webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
+    _socket.close()
