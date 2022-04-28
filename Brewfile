@@ -1,4 +1,6 @@
 brew "openssl"
 brew "mosquitto"
-brew "spatialite-tools"
+brew "postgis"
 brew "gdal"
+brew "postgresql"
+brew "memcached"

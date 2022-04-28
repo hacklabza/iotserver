@@ -7,6 +7,12 @@ pep8.txt
 .coverage
 .pytest_cache
 
+# python and deps
+.python-version
+
+# brew
+Brewfile.lock.json
+
 # production
 build/
 /docs/_build

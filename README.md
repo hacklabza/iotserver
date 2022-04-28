@@ -2,16 +2,14 @@
 
 Simple IoT Server, Configuration Tool & Dashboard
 
-[![Build Status](https://app.travis-ci.com/hacklabza/iotserver.svg?branch=develop)](https://app.travis-ci.com/hacklabza/iotserver)
-
 ## Requirements
 
- - Python 3.9+
- - Git
- - Mosquitto
- - SQLite
- - spatialite-tools
- - gdal
+- Python 3.10+
+- Git
+- Mosquitto
+- PostgreSQL
+- PostGIS
+- gdal
 
 For more information on install spatialite see: https://docs.djangoproject.com/en/3.2/ref/contrib/gis/install/spatialite/
 
@@ -20,23 +18,30 @@ For more information on install spatialite see: https://docs.djangoproject.com/e
 ```bash
 $ git clone git@github.com:hacklabza/iotserver.git
 $ cd iotserver/
+pyenv local 3.10.*
+poetry install
+```
 
-# Create a virtualenv or use pyenv
-$ python3 -m venv ve
-$ . ve/bin/activate
+If you have issues with sqlite extensions, try this when install python via pyenv:
 
-# Install the requirements
-$ pip install -r requirements.txt
+```bash
+PYTHON_CONFIGURE_OPTS="--enable-loadable-sqlite-extensions" \
+LDFLAGS="-L/usr/local/opt/sqlite/lib" \
+CPPFLAGS="-I/usr/local/opt/sqlite/include" \
+pyenv install 3.10.*
+```
 
-# Run the server to test your installation
-$ ./manage.py migrate
-$ ./manage.py runserver
+### Run the server to test your installation
+
+```bash
+poetry run ./manage.py migrate
+$ poetry run ./manage.py runserver
 ```
 
 ## Testing
 
 ```bash
-$ make test
+poetry run pytest .
 ```
 
 ## Getting Started
