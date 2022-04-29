@@ -1,5 +1,7 @@
+import factory
 import factory.fuzzy
 from django.contrib.gis.geos import Point
+from django.db.models import signals
 from django.utils.text import slugify
 
 from iotserver.apps.device import models
@@ -20,6 +22,7 @@ class DeviceTypeFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText(length=12)
 
 
+@factory.django.mute_signals(signals.post_save, signals.pre_save)
 class DeviceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Device

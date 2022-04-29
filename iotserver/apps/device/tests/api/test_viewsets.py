@@ -1,6 +1,8 @@
 import json
 
+import factory
 import pytest
+from django.db.models import signals
 from rest_framework.test import APIClient
 
 from iotserver.apps.device.tests import factories as device_factories
@@ -116,6 +118,7 @@ class TestDeviceTypeViewset(object):
 
 
 @pytest.mark.django_db
+@factory.django.mute_signals(signals.post_save, signals.pre_save)
 class TestDeviceViewset(object):
     root_url = '/api/devices/'
 
