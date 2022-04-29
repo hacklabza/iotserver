@@ -1,9 +1,10 @@
 import json
 import uuid
 
+from django.conf import settings
 from django.contrib.gis.db import models as gis_models
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -127,6 +128,33 @@ class DeviceStatus(models.Model):
         return reverse('devicestatus-detail', kwargs={'pk': self.pk})
 
 
+@receiver(pre_save, sender=Device)
+def handle_device_default_config(sender, instance, *args, **kwargs):
+    """Get the config from the new device and update the config field."""
+    if instance.config is None:
+        temp_file_path = f'/tmp/config.{instance.id}.json'
+        with open(temp_file_path, 'w') as input_file:
+            input_file.write('')
+
+        _socket, web_socket = webrepl.get_websocket(
+            instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+        )
+        webrepl.get_file(web_socket, temp_file_path, 'config/config.json')
+        _socket.close()
+
+        with open(temp_file_path, 'r') as input_file:
+            device_config = json.loads(input_file.read())
+
+            device_id = str(instance.id)
+            device_config['main']['identifier'] = device_id
+            device_config['mqtt']['client_id'] = device_id
+
+            # Ignore the pin config
+            del device_config['pins']
+
+            instance.config = device_config
+
+
 @receiver(post_save, sender=Device)
 def handle_device_config_update(sender, instance, *args, **kwargs):
     """Update config on the physical device via webrepl."""
@@ -134,6 +162,8 @@ def handle_device_config_update(sender, instance, *args, **kwargs):
     with open(temp_file_path, 'w') as input_file:
         input_file.write(json.dumps(instance.full_config, indent=4))
 
-    _socket, web_socket = webrepl.get_websocket(instance.ip_address, 8266, None)
+    _socket, web_socket = webrepl.get_websocket(
+        instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+    )
     webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
     _socket.close()

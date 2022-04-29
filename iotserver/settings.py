@@ -169,3 +169,7 @@ MAP_WIDGETS = {
         'IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'
     ),
 }
+
+# Webrepl config
+WEBREPL_PORT = os.environ.get('IOTSERVER_WEBREPL_PORT', 8266)
+WEBREPL_PASSWORD = os.environ.get('IOTSERVER_WEBREPL_PASSWORD', 'webrepl-password')
