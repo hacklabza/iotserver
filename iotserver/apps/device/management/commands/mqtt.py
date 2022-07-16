@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 import paho.mqtt.client as mqtt
 from django.conf import settings
@@ -43,8 +44,9 @@ class Command(BaseCommand):
         device_status = DeviceStatus.objects.create(
             device=device, status=json.loads(message.payload)
         )
+        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
         self.stdout.write(
             self.style.SUCCESS(
-                f'Status message received for {device_status.device_id} and processed.'
+                f'[{timestamp}] Status message received for {device_status.device_id} and processed.'
             )
         )
