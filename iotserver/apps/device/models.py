@@ -23,6 +23,13 @@ class Location(models.Model):
     def resource_url(self):
         return reverse('location-detail', kwargs={'pk': self.pk})
 
+    @cached_property
+    def coordinates(self):
+        return {
+            'latitude': self.position.y,
+            'longitude': self.position.x,
+        }
+
 
 class DeviceType(models.Model):
     name = models.CharField(max_length=32)
@@ -73,7 +80,7 @@ class Device(models.Model):
     @cached_property
     def full_config(self):
         config = self.config
-        config['pins'] = [pin.config for pin in self.pins.all()]
+        config['pins'] = [pin.config for pin in self.pins.all().order_by('-pin_number')]
         return config
 
 
@@ -84,6 +91,7 @@ class DevicePin(models.Model):
     identifier = models.SlugField(max_length=64)
     pin_number = models.PositiveSmallIntegerField(blank=True, null=True)
 
+    interval = models.IntegerField(default=1)
     analog = models.BooleanField(default=False)
     read = models.BooleanField(default=False)
 
@@ -102,6 +110,7 @@ class DevicePin(models.Model):
             'pin_number': self.pin_number,
             'name': self.name,
             'identifier': self.identifier,
+            'interval': self.interval,
             'analog': self.analog,
             'read': self.read,
             'rule': self.rule,
