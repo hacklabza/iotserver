@@ -124,6 +124,17 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-cors-headers"
+version = "3.12.0"
+description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "django-map-widgets"
 version = "0.3.3"
 description = "Map widgets for Django PostGIS fields"
@@ -523,7 +534,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "e7890197d942500a004a287379c4876d6d3efdd82ac9b1dc9e6f039b0d3251a4"
+content-hash = "81e88adc7290a1519c00e16143814ab357fafb4c9b883df8e22bb879b7914f93"
 
 [metadata.files]
 asgiref = [
@@ -590,6 +601,10 @@ distlib = [
 django = [
     {file = "Django-4.0.4-py3-none-any.whl", hash = "sha256:07c8638e7a7f548dc0acaaa7825d84b7bd42b10e8d22268b3d572946f1e9b687"},
     {file = "Django-4.0.4.tar.gz", hash = "sha256:4e8177858524417563cc0430f29ea249946d831eacb0068a1455686587df40b5"},
+]
+django-cors-headers = [
+    {file = "django-cors-headers-3.12.0.tar.gz", hash = "sha256:5f07e2ff8a95c887698e748588a4a0b2ad0ad1b5a292e2d33132f1253e2a97cb"},
+    {file = "django_cors_headers-3.12.0-py3-none-any.whl", hash = "sha256:39d1d5acb872c1860ecfd88b8572bfbb3a1f201b5685ede951d71fc57c7dfae5"},
 ]
 django-map-widgets = [
     {file = "django-map-widgets-0.3.3.tar.gz", hash = "sha256:d85db880417c978579ef236595420383f444266813c5fa12cce6d5be5a332788"},
