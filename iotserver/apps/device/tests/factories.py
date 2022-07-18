@@ -51,6 +51,7 @@ class DevicePinFactory(factory.django.DjangoModelFactory):
     identifier = factory.LazyAttribute(lambda obj: slugify(obj.name))
     pin_number = factory.fuzzy.FuzzyInteger(1, high=32)
 
+    interval = factory.fuzzy.FuzzyInteger(1, 60)
     analog = factory.fuzzy.FuzzyChoice([True, False])
     read = factory.fuzzy.FuzzyChoice([True, False])
 
