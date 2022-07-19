@@ -10,7 +10,7 @@ exclude = '''
 
 [tool.poetry]
 name = "iotserver"
-version = "0.1.0"
+version = "0.9.0"
 description = "Simple IoT Server, Configuration Tool & Dashboard"
 authors = ["Jonathan Bydendyk <jpbydendyk@hacklab.co.za>"]
 license = "BSD"
