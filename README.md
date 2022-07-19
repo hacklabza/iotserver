@@ -1,4 +1,4 @@
-# IoT Server
+# IoT Server (v0.9.0)
 
 Simple IoT Server, Configuration Tool & Dashboard
 
