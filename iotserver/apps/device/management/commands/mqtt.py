@@ -15,9 +15,10 @@ class Command(BaseCommand):
         client.subscribe('iot-devices/#')
 
     def mqtt_on_message(self, client, userdata, message):
-        self.stdout.write(self.style.SUCCESS(f'{message.topic}: {message.payload}'))
         if 'status' in message.topic:
             self.handle_status_queue(message)
+        if 'logs' in message.topic:
+            self.handle_log_queue(message)
 
     def handle(self, *args, **options):
         client = mqtt.Client()
@@ -48,5 +49,14 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f'[{timestamp}] Status message received for {device_status.device_id} and processed.'
+            )
+        )
+
+    def handle_log_queue(self, message):
+        device_id = message.topic.split('/')[1]
+        timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+        self.stdout.write(
+            self.style.WARNING(
+                f'[{timestamp}] Log received for {device_id} with message: "{message.payload}"'
             )
         )
