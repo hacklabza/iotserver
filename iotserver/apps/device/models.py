@@ -80,11 +80,15 @@ class Device(models.Model):
     @cached_property
     def full_config(self):
         config = self.config
-        config['pins'] = [pin.config for pin in self.pins.all().order_by('-pin_number')]
+        config['pins'] = [
+            pin.config for pin in self.pins.filter(active=True).order_by('-pin_number')
+        ]
         return config
 
 
 class DevicePin(models.Model):
+    active = models.BooleanField(default=True)
+
     device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='pins')
 
     name = models.CharField(max_length=32)
