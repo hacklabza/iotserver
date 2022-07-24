@@ -64,9 +64,9 @@ class Device(models.Model):
         Location, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    ip_address = models.GenericIPAddressField()
-    mac_address = models.CharField(max_length=48)
-    hostname = models.CharField(max_length=64)
+    ip_address = models.GenericIPAddressField(unique=True)
+    mac_address = models.CharField(max_length=48, unique=True)
+    hostname = models.CharField(max_length=64, blank=True, null=True)
 
     config = models.JSONField(blank=True, null=True)
 
@@ -92,7 +92,7 @@ class DevicePin(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='pins')
 
     name = models.CharField(max_length=32)
-    identifier = models.SlugField(max_length=64)
+    identifier = models.SlugField(max_length=64, unique=True)
     pin_number = models.PositiveSmallIntegerField(blank=True, null=True)
 
     interval = models.IntegerField(default=1)
@@ -139,6 +139,27 @@ class DeviceStatus(models.Model):
     @cached_property
     def resource_url(self):
         return reverse('devicestatus-detail', kwargs={'pk': self.pk})
+
+
+class DeviceHealth(models.Model):
+    device = models.OneToOneField(
+        Device, on_delete=models.CASCADE, related_name='health'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    status = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = 'Device Health'
+
+    def __str__(self):
+        return self.device.name
+
+    @cached_property
+    def resource_url(self):
+        return reverse('devicehealth-detail', kwargs={'pk': self.pk})
 
 
 @receiver(pre_save, sender=Device)

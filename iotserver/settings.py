@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     # 3rd party apps
     'corsheaders',
+    'django_filters',
     'mapwidgets',
     'rest_framework',
     'rest_framework_gis',
@@ -120,6 +121,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
 

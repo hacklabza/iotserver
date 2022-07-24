@@ -135,6 +135,17 @@ python-versions = ">=3.7"
 Django = ">=3.2"
 
 [[package]]
+name = "django-filter"
+version = "22.1"
+description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+Django = ">=3.2"
+
+[[package]]
 name = "django-map-widgets"
 version = "0.3.3"
 description = "Map widgets for Django PostGIS fields"
@@ -534,7 +545,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "81e88adc7290a1519c00e16143814ab357fafb4c9b883df8e22bb879b7914f93"
+content-hash = "0a7d045061e322bd83425cbf859d2b70e317c9bc63855f7d047ea51e1f4cc1cd"
 
 [metadata.files]
 asgiref = [
@@ -603,6 +614,7 @@ django-cors-headers = [
     {file = "django-cors-headers-3.12.0.tar.gz", hash = "sha256:5f07e2ff8a95c887698e748588a4a0b2ad0ad1b5a292e2d33132f1253e2a97cb"},
     {file = "django_cors_headers-3.12.0-py3-none-any.whl", hash = "sha256:39d1d5acb872c1860ecfd88b8572bfbb3a1f201b5685ede951d71fc57c7dfae5"},
 ]
+django-filter = []
 django-map-widgets = [
     {file = "django-map-widgets-0.3.3.tar.gz", hash = "sha256:d85db880417c978579ef236595420383f444266813c5fa12cce6d5be5a332788"},
     {file = "django_map_widgets-0.3.3-py3-none-any.whl", hash = "sha256:2f514f4faff4b0fac8da085e0a8724f60d8ac06757e7b51194d5606c1392b838"},

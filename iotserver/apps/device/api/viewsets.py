@@ -15,21 +15,31 @@ class DeviceTypeViewSet(viewsets.ModelViewSet):
 class DeviceViewSet(viewsets.ModelViewSet):
     queryset = models.Device.objects.all()
     serializer_class = serializers.DeviceSerializer
+    filterset_fields = ['type', 'active']
 
 
 class DevicePinViewSet(viewsets.ModelViewSet):
     queryset = models.DevicePin.objects.all()
     serializer_class = serializers.DevicePinSerializer
+    filterset_fields = ['device', 'active']
 
 
 class DeviceStatusViewSet(viewsets.ModelViewSet):
     queryset = models.DeviceStatus.objects.all()
     serializer_class = serializers.DeviceStatusSerializer
+    filterset_fields = ['device']
+
+
+class DeviceHealthViewSet(viewsets.ModelViewSet):
+    queryset = models.DeviceHealth.objects.all()
+    serializer_class = serializers.DeviceHealthSerializer
+    filterset_fields = ['device']
 
 
 class LocationViewSet(viewsets.ModelViewSet):
     queryset = models.Location.objects.all()
     serializer_class = serializers.LocationSerializer
+    filterset_fields = ['device']
 
     @action(detail=True, methods=['get'])
     def weather(self, request, pk=None):

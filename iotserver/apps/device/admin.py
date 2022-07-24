@@ -54,6 +54,12 @@ class DeviceStatusModelAdmin(admin.ModelAdmin):
     list_filter = ('device__name', 'created_at')
 
 
+@admin.register(models.DeviceHealth)
+class DeviceHealthModelAdmin(admin.ModelAdmin):
+    list_display = ('device', 'updated_at', 'status')
+    list_filter = ('device__name', 'updated_at', 'status')
+
+
 @admin.register(models.Location)
 class LocationModelAdmin(admin.ModelAdmin):
     formfield_overrides = {gis_models.PointField: {'widget': GooglePointFieldWidget}}
