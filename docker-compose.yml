@@ -4,7 +4,7 @@ services:
 
   postgis:
     image: mdillon/postgis
-    restart: always
+    restart: unless-stopped
     volumes:
        - postgres_data:/var/lib/postgresql/data
     container_name: iotserver-postgis
@@ -28,7 +28,7 @@ services:
 
   memcached:
     image: memcached
-    restart: always
+    restart: unless-stopped
     container_name: iotserver-memcached
     ports:
       - "11211:11211"
@@ -39,7 +39,7 @@ services:
 
   mqtt:
     image: eclipse-mosquitto
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./docker/mqtt:/mosquitto/config/
     container_name: iotserver-mqtt
@@ -52,7 +52,7 @@ services:
 
   api:
     build: .
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./:/usr/src/app
     container_name: iotserver-api
