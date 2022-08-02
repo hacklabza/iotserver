@@ -16,6 +16,4 @@ RUN poetry config virtualenvs.create false && poetry install --no-interaction --
 COPY entrypoint.sh /bin/entrypoint.sh
 COPY manage.py /bin/manage.py
 
-COPY . .
-
 EXPOSE 8000
