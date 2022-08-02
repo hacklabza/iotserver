@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('IOTSERVER_SECRET_KEY', 'insecure-secretkey')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('IOTSERVER_DJANGO_DEBUG', '1') == '1'
 
 ALLOWED_HOSTS = ['*']
 
@@ -80,10 +80,10 @@ WSGI_APPLICATION = 'iotserver.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'iotserver',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
+        'NAME': os.environ.get('IOTSERVER_POSTGRES_DBNAME', 'iotserver'),
+        'USER': os.environ.get('IOTSERVER_POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.environ.get('IOTSERVER_POSTGRES_PASSWORD', ''),
+        'HOST': os.environ.get('IOTSERVER_POSTGRES_HOST', 'localhost'),
         'PORT': '5432',
     }
 }
@@ -92,7 +92,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': '127.0.0.1:11211',
+        'LOCATION': os.environ.get('IOTSERVER_MEMCACHED_LOCATION', 'localhost:11211'),
         'TIMEOUT': (60 * 60),  # 1 hour
     }
 }
@@ -137,6 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 # CORS Setup
 CORS_ORIGIN_WHITELIST = [
