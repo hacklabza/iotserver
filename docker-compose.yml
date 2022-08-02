@@ -28,6 +28,7 @@ services:
 
   memcached:
     image: memcached
+    restart: always
     container_name: iotserver-memcached
     ports:
       - "11211:11211"
@@ -38,6 +39,7 @@ services:
 
   mqtt:
     image: eclipse-mosquitto
+    restart: always
     container_name: iotserver-mqtt
     ports:
       - "1883:1883"
