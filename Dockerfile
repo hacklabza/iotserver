@@ -8,6 +8,7 @@ RUN pip install -U pip \
   && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 
 ENV PATH="${PATH}:/root/.poetry/bin"
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 COPY pyproject.toml /usr/src/app/pyproject.toml
 COPY poetry.lock /usr/src/app/poetry.lock
