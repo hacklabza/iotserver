@@ -1,0 +1,87 @@
+version: '3'
+
+services:
+
+  postgis:
+    image: mdillon/postgis
+    restart: unless-stopped
+    volumes:
+       - postgres_data:/var/lib/postgresql/data
+    container_name: iotserver-postgis
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${IOTSERVER_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${IOTSERVER_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${IOTSERVER_POSTGRES_DBNAME}
+    networks:
+      services-network:
+        aliases:
+          - postgis
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  memcached:
+    image: memcached
+    restart: unless-stopped
+    container_name: iotserver-memcached
+    ports:
+      - "11211:11211"
+    networks:
+      services-network:
+        aliases:
+          - memcached
+
+  mqtt:
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./docker/mqtt:/mosquitto/config/
+    container_name: iotserver-mqtt
+    ports:
+      - "1883:1883"
+    networks:
+      services-network:
+        aliases:
+          - mqtt
+
+  api:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./:/usr/src/app
+    container_name: iotserver-api
+    env_file:
+      - .env
+    environment:
+      - IOTSERVER_DJANGO_DEBUG=1
+      - IOTSERVER_POSTGRES_HOST=postgis
+      - IOTSERVER_MQTT_HOST=mqtt
+      - IOTSERVER_MEMCACHED_LOCATION=memcached:11211
+    depends_on:
+      postgis:
+        condition: service_healthy
+    links:
+      - postgis
+      - memcached
+      - mqtt
+    ports:
+      - "8000:8000"
+    networks:
+      services-network:
+        aliases:
+          - api
+    command: ["./entrypoint.sh"]
+
+volumes:
+  postgres_data:
+
+networks:
+  services-network:
+    name: services-network
+    driver: bridge
