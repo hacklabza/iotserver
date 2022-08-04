@@ -6,6 +6,7 @@ Simple IoT Server, Configuration Tool & Dashboard
 
 - Python 3.10+
 - Git
+- Memcached
 - Mosquitto
 - PostgreSQL
 - PostGIS
@@ -14,10 +15,10 @@ Simple IoT Server, Configuration Tool & Dashboard
 ## Installation
 
 ```bash
-$ git clone https://github.com/hacklabza/iotserver.git
-$ cd iotserver/
+git clone https://github.com/hacklabza/iotserver.git
+cd iotserver/
 pyenv local 3.10.*
-poetry Installation
+poetry install
 ```
 
 ### Run the server to test your installation
