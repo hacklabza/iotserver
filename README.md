@@ -51,7 +51,7 @@ In my case I've deployed the API and services to a raspberrypi zero and was unab
 
 ```bash
 sudo apt update
-sudo apt install -y --no-install-recommends git vim python3-pip postgresql-client gdal-bin libgdal-dev openssl
+sudo apt install -y --no-install-recommends git vim python3-pip postgresql-client gdal-bin libgdal-dev libffi-dev openssl
 ```
 
 ### PostGIS Setup
@@ -59,6 +59,8 @@ sudo apt install -y --no-install-recommends git vim python3-pip postgresql-clien
 ```bash
 sudo apt install -y --no-install-recommends postgresql postgis
 sudo su - postgres
+creatdb iotserver
+psql -d iotserver
 $postgres-# CREATE EXTENSION postgis;
 ```
 
@@ -72,9 +74,9 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 poetry install
 
-./manage.py migrate --noinput
-./manage.py collectstatic --noinput
-./manage.py createsuperuser
+poetry run manage.py migrate --noinput
+poetry run manage.py collectstatic --noinput
+poetry run manage.py createsuperuser
 
 poetry run gunicorn iotserver.wsgi:application -w 4 -b :8000 --reload
 poetry run manage.py mqtt
