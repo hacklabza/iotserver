@@ -2,7 +2,7 @@ FROM python
 
 WORKDIR /usr/src/app
 
-RUN apt-get install -y --no-install-recommends postgresql-client gdal-bin libgdal-dev
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client gdal-bin libgdal-dev
 RUN pip install -U pip \
   && pip install cleo tomlkit poetry.core requests cachecontrol cachy html5lib pkginfo virtualenv lockfile \
   && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
