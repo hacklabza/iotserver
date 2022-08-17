@@ -182,7 +182,6 @@ def handle_device_default_config(sender, instance, *args, **kwargs):
 
                 device_id = str(instance.id)
                 device_config['main']['identifier'] = device_id
-                device_config['mqtt']['client_id'] = device_id
 
                 # Ignore the pin config
                 del device_config['pins']
