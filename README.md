@@ -45,23 +45,42 @@ To create a super user which you can use to populate your devices and users, exe
 
 The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development.
 
-In my case I've deployed the API and services to a raspberrypi zero and was unable to get docker-compose to work. These are the steps I took to install it directly to the zero.
+In my case I've deployed the API and services to a raspberrypi zero and was unable to get docker-compose to work. These are the steps I took to install it directly to the zero, however they may differ based on the arch type.
 
 ### System Dependancies
 
 ```bash
 sudo apt update
-sudo apt install -y --no-install-recommends git vim python3-pip postgresql-client gdal-bin libgdal-dev libffi-dev openssl
+sudo apt install -y --no-install-recommends git vim python3-pip python3-dev postgresql-client gdal-bin libgdal-dev libffi-dev openssl
 ```
 
 ### PostGIS Setup
 
 ```bash
-sudo apt install -y --no-install-recommends postgresql postgis
+sudo apt install -y --no-install-recommends postgresql postgis postgresql-13-postgis-3-scripts
 sudo su - postgres
-creatdb iotserver
+createdb iotserver
 psql -d iotserver
 $postgres-# CREATE EXTENSION postgis;
+```
+
+### Memcached Setup
+
+```bash
+sudo apt install -y --no-install-recommends memcached
+```
+
+### MQTT Setup
+
+```bash
+sudo apt install -y --no-install-recommends mosquitto
+```
+
+Add the following lines to `/etc/mosquitto/mosquitto.conf` and restart the service
+
+```bash
+listener 1883
+allow_anonymous true
 ```
 
 ### API Setup
@@ -74,8 +93,11 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 poetry install
 
-poetry run manage.py migrate --noinput
-poetry run manage.py collectstatic --noinput
+cp .env.example .env  # update as required
+cp manage.py ~/.poetry/bin/
+
+poetry run manage.py migrate
+poetry run manage.py collectstatic
 poetry run manage.py createsuperuser
 
 poetry run gunicorn iotserver.wsgi:application -w 4 -b :8000 --reload

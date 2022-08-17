@@ -81,7 +81,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': os.environ.get('IOTSERVER_POSTGRES_DBNAME', 'iotserver'),
-        'USER': os.environ.get('IOTSERVER_POSTGRES_USER', 'postgres'),
+        'USER': os.environ.get('IOTSERVER_POSTGRES_USER', ''),
         'PASSWORD': os.environ.get('IOTSERVER_POSTGRES_PASSWORD', ''),
         'HOST': os.environ.get('IOTSERVER_POSTGRES_HOST', 'localhost'),
         'PORT': '5432',
@@ -176,6 +176,9 @@ MAP_WIDGETS = {
         'IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'
     ),
 }
+
+# Device syncing
+AUTO_SYNC_DEVICE = os.environ.get('IOTSERVER_AUTO_SYNC_DEVICE', '0') == '1'
 
 # Webrepl config
 WEBREPL_PORT = os.environ.get('IOTSERVER_WEBREPL_PORT', 8266)

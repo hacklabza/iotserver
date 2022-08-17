@@ -165,39 +165,41 @@ class DeviceHealth(models.Model):
 @receiver(pre_save, sender=Device)
 def handle_device_default_config(sender, instance, *args, **kwargs):
     """Get the config from the new device and update the config field."""
-    if instance.config is None:
-        temp_file_path = f'/tmp/config.{instance.id}.json'
-        with open(temp_file_path, 'w') as input_file:
-            input_file.write('')
+    if settings.AUTO_SYNC_DEVICE:
+        if instance.config is None:
+            temp_file_path = f'/tmp/config.{instance.id}.json'
+            with open(temp_file_path, 'w') as input_file:
+                input_file.write('')
 
-        _socket, web_socket = webrepl.get_websocket(
-            instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
-        )
-        webrepl.get_file(web_socket, temp_file_path, 'config/config.json')
-        _socket.close()
+            _socket, web_socket = webrepl.get_websocket(
+                instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+            )
+            webrepl.get_file(web_socket, temp_file_path, 'config/config.json')
+            _socket.close()
 
-        with open(temp_file_path, 'r') as input_file:
-            device_config = json.loads(input_file.read())
+            with open(temp_file_path, 'r') as input_file:
+                device_config = json.loads(input_file.read())
 
-            device_id = str(instance.id)
-            device_config['main']['identifier'] = device_id
-            device_config['mqtt']['client_id'] = device_id
+                device_id = str(instance.id)
+                device_config['main']['identifier'] = device_id
+                device_config['mqtt']['client_id'] = device_id
 
-            # Ignore the pin config
-            del device_config['pins']
+                # Ignore the pin config
+                del device_config['pins']
 
-            instance.config = device_config
+                instance.config = device_config
 
 
 @receiver(post_save, sender=Device)
 def handle_device_config_update(sender, instance, *args, **kwargs):
     """Update config on the physical device via webrepl."""
-    temp_file_path = f'/tmp/config.{instance.id}.json'
-    with open(temp_file_path, 'w') as input_file:
-        input_file.write(json.dumps(instance.full_config, indent=4))
+    if settings.AUTO_SYNC_DEVICE:
+        temp_file_path = f'/tmp/config.{instance.id}.json'
+        with open(temp_file_path, 'w') as input_file:
+            input_file.write(json.dumps(instance.full_config, indent=4))
 
-    _socket, web_socket = webrepl.get_websocket(
-        instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
-    )
-    webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
-    _socket.close()
+        _socket, web_socket = webrepl.get_websocket(
+            instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+        )
+        webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
+        _socket.close()
