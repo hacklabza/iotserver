@@ -89,7 +89,7 @@ class Device(models.Model):
 class DevicePin(models.Model):
     active = models.BooleanField(default=True)
 
-    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='pins')
+    device = models.ManyToManyField(Device, related_name='pins')
 
     name = models.CharField(max_length=32)
     identifier = models.SlugField(max_length=64, unique=True)
