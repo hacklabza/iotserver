@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.gis.db import models as gis_models
+from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
 from iotserver.apps.device import models
@@ -57,7 +58,14 @@ class DeviceStatusModelAdmin(admin.ModelAdmin):
 @admin.register(models.DeviceHealth)
 class DeviceHealthModelAdmin(admin.ModelAdmin):
     list_display = ('device', 'updated_at', 'status')
-    list_filter = ('device__name', 'updated_at', 'status')
+    list_filter = ('device__name', 'updated_at')
+
+    def status(self, obj):
+        if obj.status:
+            return mark_safe('<img src="/static/admin/img/icon-yes.svg" alt="True">')
+        return mark_safe('<img src="/static/admin/img/icon-no.svg" alt="False">')
+
+    status.short_description = "Status"
 
 
 @admin.register(models.Location)

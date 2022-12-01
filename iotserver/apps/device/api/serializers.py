@@ -40,6 +40,7 @@ class DeviceSerializer(serializers.ModelSerializer):
     location = LocationSerializer(many=False)
     pins = DevicePinSerializer(many=True, read_only=True)
     last_status = serializers.SerializerMethodField()
+    health = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Device
@@ -48,3 +49,6 @@ class DeviceSerializer(serializers.ModelSerializer):
 
     def get_last_status(self, instance):
         return DeviceStatusSerializer(instance.statuses.last()).data
+
+    def get_health(self, instance):
+        return DeviceStatusSerializer(instance.health.last()).data

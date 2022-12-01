@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 
 from iotserver.apps.device.utils import webrepl
@@ -149,8 +150,6 @@ class DeviceHealth(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    status = models.BooleanField(default=False)
-
     class Meta:
         verbose_name_plural = 'Device Health'
 
@@ -160,6 +159,10 @@ class DeviceHealth(models.Model):
     @cached_property
     def resource_url(self):
         return reverse('devicehealth-detail', kwargs={'pk': self.pk})
+
+    @cached_property
+    def status(self):
+        return self.updated_at > timezone.now() - timezone.timedelta(minutes=1)
 
 
 @receiver(pre_save, sender=Device)
