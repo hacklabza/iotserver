@@ -41,11 +41,32 @@ To create a super user which you can use to populate your devices and users, exe
 ./manage.py createsuperuser
 ```
 
-## Deployment
+## Deployment (Docker - Recommended)
 
-The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development.
+The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development. I've found that this is best done if you're using a RPI 3B+ with a 64bit rasbian installation.
 
-In my case I've deployed the API and services to a raspberrypi zero and was unable to get docker-compose to work. These are the steps I took to install it directly to the zero, however they may differ based on the arch type.
+### System Dependancies
+
+```bash
+sudo apt-get update && sudo apt-get upgrade
+sudo apt-get install libffi-dev libssl-dev python3-dev python3 python3-pip git
+```
+
+### Docker Compose Setup
+
+```bash
+curl -fsSL test.docker.com -o get-docker.sh && sh get-docker.sh
+sudo pip3 install docker-compose
+
+git clone https://github.com/hacklabza/iotserver.git
+cd iotserver/
+cp .env.example .env  # update as required
+sudo docker-compose up
+```
+
+## Deployment (Manual)
+
+Recommend for 32bit rasbian installation, in my case a raspberrypi zero.
 
 ### System Dependancies
 
@@ -89,7 +110,7 @@ allow_anonymous true
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
 
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+curl -sSL https://install.python-poetry.org | python3 -
 export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 poetry install
 
