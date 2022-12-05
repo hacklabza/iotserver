@@ -3,7 +3,7 @@ version: '3'
 services:
 
   postgis:
-    image: mdillon/postgis
+    image: kartoza/postgis:13-3
     restart: unless-stopped
     volumes:
        - postgres_data:/var/lib/postgresql/data
@@ -14,8 +14,10 @@ services:
       - .env
     environment:
       - POSTGRES_USER=${IOTSERVER_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${IOTSERVER_POSTGRES_PASSWORD}
-      - POSTGRES_DB=${IOTSERVER_POSTGRES_DBNAME}
+      - POSTGRES_PASS=${IOTSERVER_POSTGRES_PASSWORD}
+      - POSTGRES_DBNAME=${IOTSERVER_POSTGRES_DBNAME}
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis
+      - POSTGRES_TEMPLATE_EXTENSIONS=true
     networks:
       services-network:
         aliases:
@@ -76,7 +78,7 @@ services:
       services-network:
         aliases:
           - api
-    command: ["./entrypoint.sh"]
+    command: ["./entrypointapi.sh"]
 
 volumes:
   postgres_data:
