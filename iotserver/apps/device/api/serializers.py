@@ -51,4 +51,4 @@ class DeviceSerializer(serializers.ModelSerializer):
         return DeviceStatusSerializer(instance.statuses.last()).data
 
     def get_health(self, instance):
-        return DeviceStatusSerializer(instance.health.last()).data
+        return DeviceHealthSerializer(instance.health).data
