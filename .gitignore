@@ -46,3 +46,6 @@ celerybeat-schedule
 .env
 .venv
 .keys/
+
+# docker
+/docker/
