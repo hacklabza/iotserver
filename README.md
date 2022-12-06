@@ -61,6 +61,7 @@ pip3 install docker-compose
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
 cp .env.example .env  # update as required
+cp mosquitto.conf.example docker/mqtt/mosquitto.conf
 curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh
 docker-compose -f docker-compose.rpi.yml up
 ```
@@ -101,7 +102,11 @@ sudo apt install -y --no-install-recommends mosquitto
 Add the following lines to `/etc/mosquitto/mosquitto.conf` and restart the service
 
 ```bash
+persistence true
+persistence_location /mosquitto/data/
+log_dest file /mosquitto/log/mosquitto.log
 listener 1883
+max_keepalive 0
 allow_anonymous true
 ```
 
