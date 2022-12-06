@@ -30,9 +30,14 @@ class DeviceStatusSerializer(serializers.ModelSerializer):
 
 
 class DeviceHealthSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+
     class Meta:
         model = models.DeviceHealth
         fields = '__all__'
+
+    def get_status(self, instance):
+        return instance.status
 
 
 class DeviceSerializer(serializers.ModelSerializer):
