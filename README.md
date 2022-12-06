@@ -56,12 +56,13 @@ sudo apt-get install libffi-dev libssl-dev python3-dev python3 python3-pip git
 
 ```bash
 curl -fsSL test.docker.com -o get-docker.sh && sh get-docker.sh
-sudo pip3 install docker-compose
+pip3 install docker-compose
 
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
 cp .env.example .env  # update as required
-sudo docker-compose up
+curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh
+docker-compose -f docker-compose.rpi.yml up
 ```
 
 ## Deployment (Manual)

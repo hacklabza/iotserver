@@ -2,10 +2,10 @@ FROM python
 
 WORKDIR /usr/src/app
 
-RUN apt-get install -y --no-install-recommends postgresql-client gdal-bin libgdal-dev
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client gdal-bin libgdal-dev
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
-ENV PATH="${PATH}:/root/.local/bin:/bin"
+ENV PATH="${PATH}:/root/.local/bin"
 
 COPY pyproject.toml /usr/src/app/pyproject.toml
 COPY poetry.lock /usr/src/app/poetry.lock

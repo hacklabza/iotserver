@@ -3,7 +3,7 @@ version: '3'
 services:
 
   postgis:
-    image: kartoza/postgis:13-3
+    image: ${DOCKER_POSTGIS_IMAGE}
     restart: unless-stopped
     volumes:
        - postgres_data:/var/lib/postgresql/data
@@ -15,6 +15,7 @@ services:
     environment:
       - POSTGRES_USER=${IOTSERVER_POSTGRES_USER}
       - POSTGRES_PASS=${IOTSERVER_POSTGRES_PASSWORD}
+      - POSTGRES_PASSWORD=${IOTSERVER_POSTGRES_PASSWORD}
       - POSTGRES_DBNAME=${IOTSERVER_POSTGRES_DBNAME}
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis
       - POSTGRES_TEMPLATE_EXTENSIONS=true
@@ -23,7 +24,7 @@ services:
         aliases:
           - postgis
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${IOTSERVER_POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -39,12 +40,12 @@ services:
         aliases:
           - memcached
 
-  mqtt:
+  mqtt-server:
     image: eclipse-mosquitto
     restart: unless-stopped
     volumes:
       - ./docker/mqtt:/mosquitto/config/
-    container_name: iotserver-mqtt
+    container_name: iotserver-mqtt-server
     ports:
       - "1883:1883"
     networks:
@@ -71,14 +72,14 @@ services:
     links:
       - postgis
       - memcached
-      - mqtt
+      - mqtt-server
     ports:
       - "8000:8000"
     networks:
       services-network:
         aliases:
           - api
-    command: ["./entrypointapi.sh"]
+    command: ["./entrypoint.sh"]
 
 volumes:
   postgres_data:
