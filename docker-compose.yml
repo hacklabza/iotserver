@@ -40,12 +40,12 @@ services:
         aliases:
           - memcached
 
-  mqtt-server:
+  mqtt:
     image: eclipse-mosquitto
     restart: unless-stopped
     volumes:
       - ./docker/mqtt:/mosquitto/config/
-    container_name: iotserver-mqtt-server
+    container_name: iotserver-mqtt
     ports:
       - "1883:1883"
     networks:
@@ -72,7 +72,7 @@ services:
     links:
       - postgis
       - memcached
-      - mqtt-server
+      - mqtt
     ports:
       - "8000:8000"
     networks:
