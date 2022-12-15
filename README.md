@@ -56,8 +56,9 @@ sudo apt-get install libffi-dev libssl-dev python3-dev python3 python3-pip git
 
 ```bash
 curl -fsSL test.docker.com -o get-docker.sh && sh get-docker.sh
-pip3 install docker-compose
-
+sudo usermod -aG docker ${USER}
+sudo pip3 install docker-compose
+sudo systemctl enable docker
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
 cp .env.example .env  # update as required
