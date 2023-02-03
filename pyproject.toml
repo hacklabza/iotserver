@@ -18,7 +18,7 @@ license = "BSD"
 [tool.poetry.dependencies]
 python = "^3.9"
 pip = "^22.2.2"
-Django = "^4.0.4"
+Django = "^4.1.6"
 click = "^8.1.2"
 django-map-widgets = "^0.3.3"
 djangorestframework = "^3.13.1"
