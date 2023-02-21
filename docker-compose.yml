@@ -15,16 +15,16 @@ services:
     environment:
       - POSTGRES_USER=${IOTSERVER_POSTGRES_USER}
       - POSTGRES_PASS=${IOTSERVER_POSTGRES_PASSWORD}
-      - POSTGRES_PASSWORD=${IOTSERVER_POSTGRES_PASSWORD}
-      - POSTGRES_DBNAME=${IOTSERVER_POSTGRES_DBNAME}
+      - POSTGRES_DB=${IOTSERVER_POSTGRES_DBNAME}
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis
-      - POSTGRES_TEMPLATE_EXTENSIONS=true
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      - RUN_AS_ROOT=true
     networks:
       services-network:
         aliases:
           - postgis
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${IOTSERVER_POSTGRES_USER}"]
+      test: "PGPASSWORD=${IOTSERVER_POSTGRES_PASSWORD} pg_isready -h 127.0.0.1 -U ${IOTSERVER_POSTGRES_USER} -d ${IOTSERVER_POSTGRES_DBNAME}"
       interval: 5s
       timeout: 5s
       retries: 5
