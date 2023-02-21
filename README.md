@@ -54,16 +54,25 @@ sudo apt-get install libffi-dev libssl-dev python3-dev python3 python3-pip git
 
 ### Docker Compose Setup
 
+#### Setting up docker
+
 ```bash
 curl -fsSL test.docker.com -o get-docker.sh && sh get-docker.sh
-pip3 install docker-compose
+sudo usermod -aG docker ${USER}
+sudo systemctl enable docker
+sudo reboot now  # or logout of the pi user account
+```
 
+#### Setting up docker-compose, the project and environment
+```bash
+pip3 install docker-compose
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
+curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv
 cp .env.example .env  # update as required
+mkdir -p docker/mqtt
 cp mosquitto.conf.example docker/mqtt/mosquitto.conf
-curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh
-docker-compose -f docker-compose.rpi.yml up
+docker-compose -f docker-compose.yml up
 ```
 
 ## Deployment (Manual)
