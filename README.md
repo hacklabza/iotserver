@@ -139,6 +139,12 @@ poetry run manage.py migrate
 poetry run manage.py collectstatic
 poetry run manage.py createsuperuser
 
-poetry run gunicorn iotserver.wsgi:application -w 4 -b :8000 --reload
-poetry run manage.py mqtt
+sudo cp systemd/iot.api.service /etc/systemd/system/iot.api.service
+sudo cp systemd/iot.mqttsubscriber.service /etc/systemd/system/iot.mqttsubscriber.service
+
+sudo systemctl start iot.api.service
+sudo systemctl start iot.mqttsubscriber.service
+
+sudo systemctl enable iot.api.service
+sudo systemctl enable iot.mqttsubscriber.service
 ```

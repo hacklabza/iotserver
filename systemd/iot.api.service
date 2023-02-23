@@ -1,0 +1,12 @@
+[Unit]
+Description=gunicorn api daemon
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/iotserver
+ExecStart=/home/pi/.local/bin/poetry run gunicorn iotserver.wsgi:application -w 4 -b :8000 --reload
+
+[Install]
+WantedBy=multi-user.target
