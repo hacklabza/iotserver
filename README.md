@@ -43,13 +43,13 @@ To create a super user which you can use to populate your devices and users, exe
 
 ## Deployment (Docker - Recommended)
 
-The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development. I've found that this is best done if you're using a RPI 3B+ with a 64bit rasbian installation.
+The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development. I've found that this is best done if you're using a RPI 4 with a 64bit rasbian installation.
 
 ### System Dependancies
 
 ```bash
-sudo apt-get update && sudo apt-get upgrade
-sudo apt-get install libffi-dev libssl-dev python3-dev python3 python3-pip git
+sudo apt update && sudo apt upgrade
+sudo apt install libffi-dev libssl-dev python3-dev python3 python3-pip git
 ```
 
 ### Docker Compose Setup
@@ -68,7 +68,7 @@ sudo reboot now  # or logout of the pi user account
 pip3 install docker-compose
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
-curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv
+curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv - optional
 cp .env.example .env  # update as required
 mkdir -p docker/mqtt
 cp mosquitto.conf.example docker/mqtt/mosquitto.conf
@@ -82,14 +82,16 @@ Recommend for 32bit rasbian installation, in my case a raspberrypi zero.
 ### System Dependancies
 
 ```bash
-sudo apt update
+sudo apt update && sudo apt upgrade
 sudo apt install -y --no-install-recommends git vim python3-pip python3-dev postgresql-client gdal-bin libgdal-dev libffi-dev openssl
 ```
 
 ### PostGIS Setup
 
 ```bash
-sudo apt install -y --no-install-recommends postgresql postgis postgresql-13-postgis-3-scripts
+sudo apt install -y --no-install-recommends postgresql
+sudo chown postgres:postgres /var/lib/postgresql/13/main
+sudo apt install postgresql-13-postgis-3-scripts
 sudo su - postgres
 createdb iotserver
 psql -d iotserver
@@ -115,7 +117,7 @@ persistence true
 persistence_location /mosquitto/data/
 log_dest file /mosquitto/log/mosquitto.log
 listener 1883
-max_keepalive 0
+max_keepalive 0  # Remove if this causes startup issues
 allow_anonymous true
 ```
 
@@ -129,8 +131,9 @@ curl -sSL https://install.python-poetry.org | python3 -
 export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 poetry install
 
+curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv - optional
 cp .env.example .env  # update as required
-cp manage.py ~/.poetry/bin/
+cp manage.py ~/.local/bin/
 
 poetry run manage.py migrate
 poetry run manage.py collectstatic
