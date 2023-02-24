@@ -41,9 +41,11 @@ To create a super user which you can use to populate your devices and users, exe
 ./manage.py createsuperuser
 ```
 
-## Deployment (Docker - Recommended)
+## Deployment (Docker)
 
-The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development. I've found that this is best done if you're using a RPI 4 with a 64bit rasbian installation.
+The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development. I've found that this is best done if you're using a PC or Server.
+
+**Doesn't play well with RPi!**
 
 ### System Dependancies
 
@@ -64,6 +66,7 @@ sudo reboot now  # or logout of the pi user account
 ```
 
 #### Setting up docker-compose, the project and environment
+
 ```bash
 pip3 install docker-compose
 git clone https://github.com/hacklabza/iotserver.git
@@ -77,7 +80,7 @@ docker-compose -f docker-compose.yml up
 
 ## Deployment (Manual)
 
-Recommend for 32bit rasbian installation, in my case a raspberrypi zero.
+Recommend for 64bit/32bit rasbian installation, in my case a raspberrypi zero.
 
 ### System Dependancies
 
