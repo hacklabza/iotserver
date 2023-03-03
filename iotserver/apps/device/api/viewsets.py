@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from iotserver.apps.device import models
-from iotserver.apps.device.api import serializers
+from iotserver.apps.device.api import filters, serializers
 from iotserver.apps.device.integrations.weather import Location, Weather
 
 
@@ -27,7 +27,7 @@ class DevicePinViewSet(viewsets.ModelViewSet):
 class DeviceStatusViewSet(viewsets.ModelViewSet):
     queryset = models.DeviceStatus.objects.all()
     serializer_class = serializers.DeviceStatusSerializer
-    filterset_fields = ['device']
+    filterset_class = filters.DeviceStatusFilter
 
 
 class DeviceHealthViewSet(viewsets.ModelViewSet):
