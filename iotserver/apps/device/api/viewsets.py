@@ -28,6 +28,8 @@ class DeviceStatusViewSet(viewsets.ModelViewSet):
     queryset = models.DeviceStatus.objects.all()
     serializer_class = serializers.DeviceStatusSerializer
     filterset_class = filters.DeviceStatusFilter
+    ordering_fields = ['created_at']
+    ordering = ['created_at']
 
 
 class DeviceHealthViewSet(viewsets.ModelViewSet):

@@ -121,7 +121,10 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 50,
 }
@@ -142,9 +145,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 # CORS Setup
-CORS_ORIGIN_WHITELIST = [
-    os.environ.get('IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'),
-]
+CORS_ORIGIN_WHITELIST = os.environ.get(
+    'IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'
+).split(',')
 
 # MQTT settings
 MQTT = {

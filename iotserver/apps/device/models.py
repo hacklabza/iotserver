@@ -133,6 +133,7 @@ class DeviceStatus(models.Model):
 
     class Meta:
         verbose_name_plural = 'Device Statuses'
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.device.name
