@@ -102,6 +102,8 @@ class DevicePin(models.Model):
 
     rule = models.JSONField(null=False)
 
+    display = models.JSONField(null=True)
+
     def __str__(self):
         return self.name
 

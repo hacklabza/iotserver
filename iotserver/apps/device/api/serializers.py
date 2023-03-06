@@ -53,7 +53,7 @@ class DeviceSerializer(serializers.ModelSerializer):
         lookup_field = 'id'
 
     def get_last_status(self, instance):
-        return DeviceStatusSerializer(instance.statuses.last()).data
+        return DeviceStatusSerializer(instance.statuses.first()).data
 
     def get_health(self, instance):
         return DeviceHealthSerializer(instance.health).data
