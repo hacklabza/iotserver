@@ -99,6 +99,7 @@ class DevicePin(models.Model):
     interval = models.IntegerField(default=1)
     analog = models.BooleanField(default=False)
     read = models.BooleanField(default=False)
+    i2c = models.BooleanField(default=False)
 
     rule = models.JSONField(null=False)
 
@@ -120,6 +121,7 @@ class DevicePin(models.Model):
             'interval': self.interval,
             'analog': self.analog,
             'read': self.read,
+            'i2c': self.i2c,
             'rule': self.rule,
         }
 
