@@ -86,15 +86,15 @@ Recommend for 64bit/32bit rasbian installation, in my case a raspberrypi zero.
 
 ```bash
 sudo apt update && sudo apt upgrade
-sudo apt install -y --no-install-recommends git vim python3-pip python3-dev postgresql-client gdal-bin libgdal-dev libffi-dev openssl
+sudo apt install -y --no-install-recommends git vim python3-pip python3-dev gdal-bin libgdal-dev libffi-dev openssl
 ```
 
 ### PostGIS Setup
 
 ```bash
-sudo apt install -y --no-install-recommends postgresql
+sudo apt install -y postgresql
 sudo chown postgres:postgres /var/lib/postgresql/13/main
-sudo apt install postgresql-13-postgis-3-scripts
+sudo apt install -y postgresql-13-postgis-3-scripts
 sudo su - postgres
 createdb iotserver
 psql -d iotserver
@@ -134,7 +134,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 poetry install
 
-curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv - optional
+curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv - optional but recommended
 cp .env.example .env  # update as required
 cp manage.py ~/.local/bin/
 
@@ -151,3 +151,7 @@ sudo systemctl start iot.mqttsubscriber.service
 sudo systemctl enable iot.api.service
 sudo systemctl enable iot.mqttsubscriber.service
 ```
+
+### Make a SD Card Backup
+
+Read more here: https://howchoo.com/pi/create-a-backup-image-of-your-raspberry-pi-sd-card-in-mac-osx. this pretty useful as cards can become corrupt if power is cut or the device is not powered down correctly.
