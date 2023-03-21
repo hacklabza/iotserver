@@ -45,7 +45,6 @@ class DeviceSerializer(serializers.ModelSerializer):
     location = LocationSerializer(many=False)
     pins = DevicePinSerializer(many=True, read_only=True)
     last_status = serializers.SerializerMethodField()
-    aggregations = serializers.SerializerMethodField()
     health = serializers.SerializerMethodField()
 
     class Meta:
