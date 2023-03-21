@@ -147,7 +147,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 # CORS Setup
 CORS_ORIGIN_WHITELIST = os.environ.get(
     'IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'
-).split(',')
+)
+if CORS_ORIGIN_WHITELIST == '*':
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST.split(',')
 
 # MQTT settings
 MQTT = {
