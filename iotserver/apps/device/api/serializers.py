@@ -29,6 +29,12 @@ class DeviceStatusSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class DeviceAggregationSerializer(serializers.Serializer):
+    minimum = serializers.DecimalField(max_digits=10, decimal_places=1)
+    maximum = serializers.DecimalField(max_digits=10, decimal_places=1)
+    average = serializers.DecimalField(max_digits=10, decimal_places=1)
+
+
 class DeviceHealthSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
 
@@ -45,6 +51,7 @@ class DeviceSerializer(serializers.ModelSerializer):
     location = LocationSerializer(many=False)
     pins = DevicePinSerializer(many=True, read_only=True)
     last_status = serializers.SerializerMethodField()
+    aggregations = serializers.SerializerMethodField()
     health = serializers.SerializerMethodField()
 
     class Meta:
@@ -54,6 +61,15 @@ class DeviceSerializer(serializers.ModelSerializer):
 
     def get_last_status(self, instance):
         return DeviceStatusSerializer(instance.statuses.first()).data
+
+    def get_aggregations(self, instance):
+        return DeviceAggregationSerializer(
+            data={
+                'minimum': 0.00,
+                'maximum': 0.00,
+                'average': 0.00,
+            }
+        ).data
 
     def get_health(self, instance):
         return DeviceHealthSerializer(instance.health).data
