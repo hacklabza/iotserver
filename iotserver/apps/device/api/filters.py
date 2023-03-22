@@ -4,8 +4,8 @@ from iotserver.apps.device import models
 
 
 class DeviceStatusFilter(filters.FilterSet):
-    start_date = filters.DateFilter(field_name='created_at', lookup_expr='gte')
-    end_date = filters.DateFilter(field_name="created_at", lookup_expr='lte')
+    start_date = filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
+    end_date = filters.DateTimeFilter(field_name="created_at", lookup_expr='lte')
     created_at = filters.DateFilter(field_name="created_at", lookup_expr='date')
 
     class Meta:
