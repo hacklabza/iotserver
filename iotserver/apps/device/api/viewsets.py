@@ -16,8 +16,9 @@ class SampleSizeMixin(object):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        sample_size = int(self.request.query_params.get('sample_size', 1))
-        queryset = queryset.annotate(idmod4=F('id') % sample_size).filter(idmod4=0)
+        sample_size = self.request.query_params.get('sample_size')
+        if sample_size is not None:
+            queryset = queryset.annotate(idmod4=F('id') % sample_size).filter(idmod4=0)
         return queryset
 
 
