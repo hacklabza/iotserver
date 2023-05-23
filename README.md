@@ -126,12 +126,14 @@ allow_anonymous true
 
 ### API Setup
 
+You may need to install the rust toolchain for RPi 32 bit OS versions due to `cryptography`.
+
 ```bash
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
 
+pip install --upgrade pip
 curl -sSL https://install.python-poetry.org | python3 -
-export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 poetry install
 
 curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv - optional but recommended
