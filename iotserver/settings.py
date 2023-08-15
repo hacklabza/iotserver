@@ -158,6 +158,22 @@ MQTT = {
 
 # Integration config
 INTEGRATIONS = {
+    'sonoff': {
+        'auth_url': os.environ.get(
+            'IOTSERVER_SONOFF_AUTH_URL',
+            'https://eu-api.coolkit.cc:8080/api/user/login',
+        ),
+        'email': os.environ.get('IOTSERVER_SONOFF_EMAIL', None),
+        'password': os.environ.get('IOTSERVER_SONOFF_PASSWORD', None),
+        'region': os.environ.get('IOTSERVER_SONOFF_REGION', 'eu'),
+        'country_code': os.environ.get('IOTSERVER_SONOFF_COUNTRY_CODE', '+27'),
+        'app_id': os.environ.get('IOTSERVER_SONOFF_APP_ID', None),
+        'app_secret': os.environ.get('IOTSERVER_SONOFF_APP_SECRET', None),
+        'device_url': os.environ.get(
+            'IOTSERVER_SONOFF_DEVICE_URL',
+            'https://eu-api.coolkit.cc:8080/api/user/device/status',
+        ),
+    },
     'weather': {
         'url': os.environ.get(
             'IOTSERVER_OPENWEATHER_URL',

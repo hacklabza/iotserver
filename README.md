@@ -75,7 +75,7 @@ curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/script
 cp .env.example .env  # update as required
 mkdir -p docker/mqtt
 cp mosquitto.conf.example docker/mqtt/mosquitto.conf
-docker-compose -f docker-compose.yml up
+docker compose -f docker-compose.yml up
 ```
 
 ## Deployment (Manual)
