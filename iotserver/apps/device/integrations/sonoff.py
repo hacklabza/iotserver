@@ -43,7 +43,8 @@ class Sonoff(object):
 
     def _authenticate(self) -> str:
         """
-        Authenticate with a pre-configured email address and password and return the access_token.
+        Authenticate with a pre-configured email address and password and return the 
+        access_token.
         """
         self.nonce = self._generate_nonce()
         request_data = {
