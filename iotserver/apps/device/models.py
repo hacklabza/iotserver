@@ -91,8 +91,7 @@ class Device(models.Model):
         return any([pin.mqtt_toggle_enabled for pin in self.pins.filter(active=True)])
     
     def mqtt_toggle(self):
-        if self.mqtt_toggle_enabled:
-            mqtt.toggle(self.id, settings.MQTT)
+        mqtt.toggle(self.id, settings.MQTT)
 
 
 class DevicePin(models.Model):
