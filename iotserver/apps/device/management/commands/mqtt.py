@@ -11,26 +11,6 @@ from iotserver.apps.device.models import Device, DeviceStatus
 class Command(BaseCommand):
     help = 'Run the mqtt client for devices.'
 
-    def mqtt_on_connect(self, client, userdata, flags, result_code):
-        client.subscribe('iot-devices/#')
-
-    def mqtt_on_message(self, client, userdata, message):
-        if 'status' in message.topic:
-            self.handle_status_queue(message)
-        if 'logs' in message.topic:
-            self.handle_log_queue(message)
-
-    def handle(self, *args, **options):
-        client = mqtt.Client()
-        client.on_connect = self.mqtt_on_connect
-        client.on_message = self.mqtt_on_message
-
-        client.connect(host=settings.MQTT['host'], port=settings.MQTT['port'])
-
-        client.loop_forever()
-
-        self.stdout.write(self.style.SUCCESS('MQTT Client started...'))
-
     def handle_status_queue(self, message):
         device_id = message.topic.split('/')[1]
         try:
@@ -60,3 +40,23 @@ class Command(BaseCommand):
                 f'[{timestamp}] Log received for {device_id} with message: "{message.payload}"'
             )
         )
+
+    def mqtt_on_connect(self, client, userdata, flags, result_code):
+        client.subscribe('iot-devices/#')
+
+    def mqtt_on_message(self, client, userdata, message):
+        if 'status' in message.topic:
+            self.handle_status_queue(message)
+        if 'logs' in message.topic:
+            self.handle_log_queue(message)
+
+    def handle(self, *args, **options):
+        client = mqtt.Client()
+        client.on_connect = self.mqtt_on_connect
+        client.on_message = self.mqtt_on_message
+
+        client.connect(host=settings.MQTT['host'], port=settings.MQTT['port'])
+
+        client.loop_forever()
+
+        self.stdout.write(self.style.SUCCESS('MQTT Client started...'))
