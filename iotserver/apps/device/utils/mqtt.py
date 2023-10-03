@@ -15,7 +15,7 @@ def toggle(device_id, mqtt_settings):
         hostname=mqtt_settings['host'],
         port=mqtt_settings['port']
     )
-    state = mqtt_state if mqtt_state == '1' else '0'
+    state = '0' if mqtt_state == '1' else '1'
     
     # Switch to the new toggle state
     mqtt_publish.single(

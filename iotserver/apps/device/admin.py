@@ -6,7 +6,7 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from iotserver.apps.device import models
 
 
-def toggle_device(modeladmin, request, queryset):
+def toggle_devices(modeladmin, request, queryset):
     for obj in queryset:
         obj.mqtt_toggle()
 
@@ -21,6 +21,7 @@ class DeviceTypeModelAdmin(admin.ModelAdmin):
 
 @admin.register(models.Device)
 class DeviceModelAdmin(admin.ModelAdmin):
+    actions = [toggle_devices]
     fieldsets = (
         (None, {'fields': ('active', 'name', 'description', 'type', 'location')}),
         (
@@ -48,7 +49,6 @@ class DeviceModelAdmin(admin.ModelAdmin):
         'ip_address',
     )
     list_filter = ('active', 'type__name', 'location__name')
-    actions = [toggle_device]
 
 
 @admin.register(models.DevicePin)

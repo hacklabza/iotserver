@@ -158,10 +158,6 @@ class DeviceStatus(models.Model):
     def resource_url(self):
         return reverse('devicestatus-detail', kwargs={'pk': self.pk})
 
-    @cached_property
-    def mqtt_toggle_status(self):
-        {"dht-sensor": {"humidity": 43.8, "temperature": 24.3}, "light-sensor": 33.05664}
-
 
 class DeviceHealth(models.Model):
     device = models.OneToOneField(
