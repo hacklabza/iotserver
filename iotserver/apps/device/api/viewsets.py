@@ -43,7 +43,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
                 data={'error': 'Device does not exist'},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        state = request.json().get('state')
+        state = request.data.get('state')
         if state is None or state not in [0, 1]:
             return Response(
                 data={'error': 'Device state must either be 1 or 0'},
