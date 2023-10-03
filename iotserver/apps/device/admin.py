@@ -6,11 +6,19 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from iotserver.apps.device import models
 
 
-def toggle_devices(modeladmin, request, queryset):
+def toggle_devices_on(modeladmin, request, queryset):
     for obj in queryset:
-        obj.mqtt_toggle()
+        obj.mqtt_toggle('1')
 
-    message = 'All selected device have been toggled on/off.'
+    message = 'All selected device have been toggled on.'
+    messages.add_message(request, level=messages.SUCCESS, message=message)
+
+
+def toggle_devices_off(modeladmin, request, queryset):
+    for obj in queryset:
+        obj.mqtt_toggle('0')
+
+    message = 'All selected device have been toggled off.'
     messages.add_message(request, level=messages.SUCCESS, message=message)
 
 
@@ -21,7 +29,7 @@ class DeviceTypeModelAdmin(admin.ModelAdmin):
 
 @admin.register(models.Device)
 class DeviceModelAdmin(admin.ModelAdmin):
-    actions = [toggle_devices]
+    actions = [toggle_devices_on, toggle_devices_off]
     fieldsets = (
         (None, {'fields': ('active', 'name', 'description', 'type', 'location')}),
         (

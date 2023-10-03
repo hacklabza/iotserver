@@ -85,13 +85,9 @@ class Device(models.Model):
             pin.config for pin in self.pins.filter(active=True).order_by('-pin_number')
         ]
         return config
-
-    @cached_property
-    def mqtt_toggle_enabled(self):
-        return any([pin.mqtt_toggle_enabled for pin in self.pins.filter(active=True)])
     
-    def mqtt_toggle(self):
-        mqtt.toggle(self.id, settings.MQTT)
+    def mqtt_toggle(self, state: str):
+        mqtt.toggle(self.id, state, settings.MQTT)
 
 
 class DevicePin(models.Model):
@@ -131,10 +127,6 @@ class DevicePin(models.Model):
             'i2c': self.i2c,
             'rule': self.rule,
         }
-    
-    @cached_property
-    def mqtt_toggle_enabled(self):
-        self.rule.get('action') == 'mqtt_toggle'
 
 
 class DeviceStatus(models.Model):
