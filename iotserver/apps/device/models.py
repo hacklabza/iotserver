@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from iotserver.apps.device.utils import webrepl
+from iotserver.apps.device.utils import mqtt, webrepl
 
 
 class Location(models.Model):
@@ -86,6 +86,14 @@ class Device(models.Model):
         ]
         return config
 
+    @cached_property
+    def mqtt_toggle_enabled(self):
+        return any([pin.mqtt_toggle_enabled for pin in self.pins.filter(active=True)])
+    
+    def mqtt_toggle(self):
+        if self.mqtt_toggle_enabled:
+            mqtt.toggle(self.id, settings.MQTT)
+
 
 class DevicePin(models.Model):
     active = models.BooleanField(default=True)
@@ -124,6 +132,10 @@ class DevicePin(models.Model):
             'i2c': self.i2c,
             'rule': self.rule,
         }
+    
+    @cached_property
+    def mqtt_toggle_enabled(self):
+        self.rule.get('action') == 'mqtt_toggle'
 
 
 class DeviceStatus(models.Model):
@@ -145,6 +157,10 @@ class DeviceStatus(models.Model):
     @cached_property
     def resource_url(self):
         return reverse('devicestatus-detail', kwargs={'pk': self.pk})
+
+    @cached_property
+    def mqtt_toggle_status(self):
+        {"dht-sensor": {"humidity": 43.8, "temperature": 24.3}, "light-sensor": 33.05664}
 
 
 class DeviceHealth(models.Model):
