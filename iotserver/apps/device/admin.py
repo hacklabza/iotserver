@@ -1,9 +1,17 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.gis.db import models as gis_models
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
 from iotserver.apps.device import models
+
+
+def toggle_device(modeladmin, request, queryset):
+    for obj in queryset:
+        obj.mqtt_toggle()
+
+    message = 'All selected device have been toggled on/off.'
+    messages.add_message(request, level=messages.SUCCESS, message=message)
 
 
 @admin.register(models.DeviceType)
@@ -40,6 +48,7 @@ class DeviceModelAdmin(admin.ModelAdmin):
         'ip_address',
     )
     list_filter = ('active', 'type__name', 'location__name')
+    actions = [toggle_device]
 
 
 @admin.register(models.DevicePin)
