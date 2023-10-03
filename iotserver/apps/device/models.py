@@ -86,8 +86,8 @@ class Device(models.Model):
         ]
         return config
     
-    def mqtt_toggle(self, state: str):
-        mqtt.toggle(self.id, state, settings.MQTT)
+    def mqtt_toggle(self, state: int):
+        mqtt.toggle(self.id, str(state), settings.MQTT)
 
 
 class DevicePin(models.Model):

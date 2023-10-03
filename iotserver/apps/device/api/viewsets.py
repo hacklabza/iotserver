@@ -34,6 +34,24 @@ class DeviceViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DeviceSerializer
     filterset_fields = ['type', 'active']
 
+    @action(detail=True, methods=['post'])
+    def toggle(self, request, pk=None):
+        try:
+            device = self.get_object()
+        except models.Device.DoesNotExist:
+            return Response(
+                data={'error': 'Device does not exist'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        state = request.json().get('state')
+        if state is None or state not in [0, 1]:
+            return Response(
+                data={'error': 'Device state must either be 1 or 0'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        device.mqtt_toggle(state)
+        return Response(status=status.HTTP_202_ACCEPTED)
+
 
 class DevicePinViewSet(viewsets.ModelViewSet):
     queryset = models.DevicePin.objects.all()
