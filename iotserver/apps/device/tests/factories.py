@@ -71,3 +71,10 @@ class DeviceStatusFactory(factory.django.DjangoModelFactory):
 
     device = factory.SubFactory(DeviceFactory)
     status = {}
+
+
+class DeviceHealthFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.DeviceHealth
+
+    device = factory.SubFactory(DeviceFactory)

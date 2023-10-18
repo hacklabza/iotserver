@@ -31,8 +31,12 @@ class DeviceTypeViewSet(viewsets.ModelViewSet):
 
 class DeviceViewSet(viewsets.ModelViewSet):
     queryset = models.Device.objects.all()
-    serializer_class = serializers.DeviceSerializer
     filterset_fields = ['type', 'active']
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return serializers.DeviceListDetailSerializer
+        return serializers.DeviceCreateUpdateSerializer
 
     @action(detail=True, methods=['post'])
     def toggle(self, request, pk=None):

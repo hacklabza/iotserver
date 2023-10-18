@@ -118,13 +118,15 @@ class TestDeviceTypeViewset(object):
         assert self.device_type.pk == return_data['id']
 
 
-@factory.django.mute_signals(signals.post_save, signals.pre_save)
 @pytest.mark.django_db
 class TestDeviceViewset(object):
     root_url = '/api/devices/'
 
     def setup_method(self, test_method):
         self.device = device_factories.DeviceFactory()
+        self.device_health = device_factories.DeviceHealthFactory(device=self.device)
+        self.device_type = device_factories.DeviceTypeFactory()
+        self.location = device_factories.LocationFactory()
 
     def test_list(self, api_client):
         response = api_client.get(self.root_url)
@@ -135,9 +137,12 @@ class TestDeviceViewset(object):
 
         assert return_data['results'][0]['name'] == self.device.name
 
-        assert self.device.pk == return_data['results'][0]['id']
-        assert self.device.type.pk == return_data['results'][0]['type']
-        assert self.device.location.pk == return_data['results'][0]['location']
+        assert str(self.device.pk) == return_data['results'][0]['id']
+        assert self.device.type.pk == return_data['results'][0]['type']['id']
+        assert self.device.location.pk == return_data['results'][0]['location']['id']
+        assert (
+            self.device_health.status == return_data['results'][0]['health']['status']
+        )
 
     def test_detail(self, api_client):
         response = api_client.get(f'{self.root_url}{self.device.pk}/')
@@ -146,22 +151,20 @@ class TestDeviceViewset(object):
         assert response.status_code == 200
         assert return_data['name'] == self.device.name
 
-        assert str(self.device.pk) in return_data['url']
-        assert str(self.device.type.pk) in return_data['type']
-        assert str(self.device.location.pk) in return_data['location']
+        assert str(self.device.pk) == return_data['id']
+        assert self.device.type.pk == return_data['type']['id']
+        assert self.device.location.pk == return_data['location']['id']
 
+    @factory.django.mute_signals(signals.post_save, signals.pre_save)
     def test_create(self, api_client):
-        device_type = device_factories.DeviceTypeFactory()
-        location = device_factories.LocationFactory()
-
         device_data = {
             'name': 'Test Device',
             'description': 'Test Device Description',
-            'type': device_type.resource_url,
-            'location': location.resource_url,
+            'type': self.device_type.id,
+            'location': self.location.id,
             'ip_address': '192.168.0.2',
             'mac_address': 'EE:01:A0:01:60:BE',
-            'hostname': 'test-device-002',
+            'hostname': 'test-device-001',
         }
         response = api_client.post(f'{self.root_url}', device_data, format='json')
         return_data = response.json()
@@ -169,21 +172,19 @@ class TestDeviceViewset(object):
         assert response.status_code == 201
         assert return_data['name'] == device_data['name']
 
-        assert str(device_type.pk) in return_data['type']
-        assert str(location.pk) in return_data['location']
+        assert self.device_type.pk == return_data['type']
+        assert self.location.pk == return_data['location']
 
+    @factory.django.mute_signals(signals.post_save, signals.pre_save)
     def test_update(self, api_client):
-        device_type = device_factories.DeviceTypeFactory()
-        location = device_factories.LocationFactory()
-
         device_data = {
-            'name': 'Test Device',
-            'description': 'Test Device Description',
-            'type': device_type.resource_url,
-            'location': location.resource_url,
-            'ip_address': self.device.ip_address,
-            'mac_address': self.device.mac_address,
-            'hostname': self.device.hostname,
+            'name': 'Test Device - v2',
+            'description': 'Test Device - v2 Description',
+            'type': self.device_type.id,
+            'location': self.location.id,
+            'ip_address': '192.168.0.3',
+            'mac_address': 'EE:01:A0:01:60:BE',
+            'hostname': 'test-device-v2-001',
         }
         response = api_client.put(
             f'{self.root_url}{self.device.pk}/', device_data, format='json'
@@ -193,9 +194,8 @@ class TestDeviceViewset(object):
         assert response.status_code == 200, return_data
         assert return_data['name'] == device_data['name']
 
-        assert str(self.device.pk) in return_data['url']
-        assert str(device_type.pk) in return_data['type']
-        assert str(location.pk) in return_data['location']
+        assert self.device_type.pk == return_data['type']
+        assert self.location.pk == return_data['location']
 
 
 @pytest.mark.django_db

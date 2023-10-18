@@ -44,9 +44,9 @@ class DeviceHealthSerializer(serializers.ModelSerializer):
         return instance.status
 
 
-class DeviceSerializer(serializers.ModelSerializer):
+class DeviceListDetailSerializer(serializers.ModelSerializer):
     type = DeviceTypeSerializer(many=False, read_only=True)
-    location = LocationSerializer(many=False)
+    location = LocationSerializer(many=False, read_only=True)
     pins = DevicePinSerializer(many=True, read_only=True)
     last_status = serializers.SerializerMethodField()
     health = serializers.SerializerMethodField()
@@ -57,7 +57,18 @@ class DeviceSerializer(serializers.ModelSerializer):
         lookup_field = 'id'
 
     def get_last_status(self, instance):
-        return DeviceStatusSerializer(instance.last_status).data
+        if instance.last_status:
+            return DeviceStatusSerializer(instance.last_status).data
 
     def get_health(self, instance):
-        return DeviceHealthSerializer(instance.health).data
+        try:
+            return DeviceHealthSerializer(instance.health).data
+        except models.Device.health.RelatedObjectDoesNotExist:
+            return None
+
+
+class DeviceCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Device
+        fields = '__all__'
+        lookup_field = 'id'
