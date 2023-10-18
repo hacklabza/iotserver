@@ -14,8 +14,8 @@ Simple IoT Server, Configuration Tool & Dashboard
 ## Installation
 
 ```bash
-$ git clone https://github.com/hacklabza/iotserver.git
-$ cd iotserver/
+git clone https://github.com/hacklabza/iotserver.git
+cd iotserver/
 pyenv local 3.10.*
 poetry Installation
 ```
@@ -24,7 +24,7 @@ poetry Installation
 
 ```bash
 poetry run ./manage.py migrate
-$ poetry run ./manage.py runserver
+poetry run ./manage.py runserver
 ```
 
 ## Testing
