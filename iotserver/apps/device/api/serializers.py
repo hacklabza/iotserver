@@ -18,6 +18,10 @@ class DeviceTypeSerializer(serializers.ModelSerializer):
 
 
 class DevicePinSerializer(serializers.ModelSerializer):
+    devices = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=models.Device.objects.all()
+    )
+
     class Meta:
         model = models.DevicePin
         fields = '__all__'
