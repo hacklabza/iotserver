@@ -70,7 +70,7 @@ class DevicePinModelAdmin(admin.ModelAdmin):
         'i2c',
         'active',
     )
-    list_filter = ('device__name', 'active')
+    list_filter = ('devices__name', 'active')
     prepopulated_fields = {'identifier': ('name',)}
 
 

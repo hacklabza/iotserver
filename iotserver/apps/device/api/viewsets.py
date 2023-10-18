@@ -50,7 +50,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
 class DevicePinViewSet(viewsets.ModelViewSet):
     queryset = models.DevicePin.objects.all()
     serializer_class = serializers.DevicePinSerializer
-    filterset_fields = ['device', 'active']
+    filterset_fields = ['devices', 'active']
 
 
 class DeviceStatusViewSet(SampleSizeMixin, viewsets.ModelViewSet):

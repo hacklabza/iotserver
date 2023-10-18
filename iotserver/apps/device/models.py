@@ -98,7 +98,7 @@ class Device(models.Model):
 class DevicePin(models.Model):
     active = models.BooleanField(default=True)
 
-    device = models.ManyToManyField(Device, related_name='pins')
+    devices = models.ManyToManyField(Device, related_name='pins')
 
     name = models.CharField(max_length=32)
     identifier = models.SlugField(max_length=64, unique=True)
