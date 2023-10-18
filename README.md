@@ -17,7 +17,8 @@ Simple IoT Server, Configuration Tool & Dashboard
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
 pyenv local 3.10.*
-poetry Installation
+poetry install
+poetry run pre-commit install
 ```
 
 ### Run the server to test your installation
