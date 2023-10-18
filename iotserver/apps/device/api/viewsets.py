@@ -36,17 +36,11 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def toggle(self, request, pk=None):
-        try:
-            device = self.get_object()
-        except models.Device.DoesNotExist:
-            return Response(
-                data={'error': 'Device does not exist'},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        device = self.get_object()
         state = request.data.get('state')
-        if state is None or state not in [0, 1]:
+        if state is None or state not in ['on', 'off']:
             return Response(
-                data={'error': 'Device state must either be 1 or 0'},
+                data={'detail': 'State must either be `on` or `off`'},
                 status=status.HTTP_404_NOT_FOUND,
             )
         device.mqtt_toggle(state)
@@ -93,6 +87,6 @@ class LocationViewSet(viewsets.ModelViewSet):
             return Response(data=getattr(weather, forecast_type))
         except AttributeError:
             return Response(
-                data={'error': 'Incorrect forecast type'},
+                data={'detail': 'Incorrect forecast type'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
