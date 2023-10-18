@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 
+from iotserver.apps.device import constants
 from iotserver.apps.device.utils import mqtt, webrepl
 
 
@@ -86,8 +87,12 @@ class Device(models.Model):
         ]
         return config
     
-    def mqtt_toggle(self, state: int):
-        mqtt.toggle(self.id, str(state), settings.MQTT)
+    @cached_property
+    def last_status(self):
+        return self.statuses.first()
+    
+    def mqtt_toggle(self, state: str):
+        mqtt.toggle(self.id, str(constants.DEVICE_TOGGLE_STATE[state]))
 
 
 class DevicePin(models.Model):

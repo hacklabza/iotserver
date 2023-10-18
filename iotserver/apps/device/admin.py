@@ -8,7 +8,7 @@ from iotserver.apps.device import models
 
 def toggle_devices_on(modeladmin, request, queryset):
     for obj in queryset:
-        obj.mqtt_toggle(1)
+        obj.mqtt_toggle('on')
 
     message = 'All selected device have been toggled on.'
     messages.add_message(request, level=messages.SUCCESS, message=message)
@@ -16,7 +16,7 @@ def toggle_devices_on(modeladmin, request, queryset):
 
 def toggle_devices_off(modeladmin, request, queryset):
     for obj in queryset:
-        obj.mqtt_toggle(0)
+        obj.mqtt_toggle('off')
 
     message = 'All selected device have been toggled off.'
     messages.add_message(request, level=messages.SUCCESS, message=message)
