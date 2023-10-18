@@ -3,11 +3,13 @@ branch = True
 source =
     iotserver
 omit =
-    *migrations*
-    *tests*
+    */management/*
+    */migrations/*
+    */tests/*
     *asgi*
     *wsgi*
     *apps.py
+    */webrepl.py
 
 [report]
 show_missing = True
