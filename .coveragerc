@@ -9,6 +9,7 @@ omit =
     *asgi*
     *wsgi*
     *apps.py
+    */admin.py
     */webrepl.py
 
 [report]

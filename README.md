@@ -31,7 +31,7 @@ poetry run ./manage.py runserver
 ## Testing
 
 ```bash
-poetry run pytest .
+poetry run pytest -s . --cov
 ```
 
 ## Getting Started

@@ -86,11 +86,11 @@ class Device(models.Model):
             pin.config for pin in self.pins.filter(active=True).order_by('-pin_number')
         ]
         return config
-    
+
     @cached_property
     def last_status(self):
         return self.statuses.first()
-    
+
     def mqtt_toggle(self, state: str):
         mqtt.toggle(self.id, str(constants.DEVICE_TOGGLE_STATE[state]))
 

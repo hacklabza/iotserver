@@ -55,6 +55,12 @@ class TestDeviceModel(object):
     def test_last_status(self):
         assert self.device.last_status.pk == self.device_status.pk
 
+    def test_mqtt_toggle(self, mocker):
+        mock_mqtt_toggle = mocker.patch('iotserver.apps.device.models.mqtt.toggle')
+        mock_mqtt_toggle.return_value = None
+        self.device.mqtt_toggle('on')
+        mock_mqtt_toggle.assert_called_once_with(self.device.id, '1')
+
 
 @pytest.mark.django_db
 class TestDevicePinModel(object):
