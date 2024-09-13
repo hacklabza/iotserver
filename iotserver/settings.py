@@ -176,10 +176,10 @@ INTEGRATIONS = {
     'weather': {
         'url': os.environ.get(
             'IOTSERVER_OPENWEATHER_URL',
-            'https://api.openweathermap.org/data/2.5/onecall',
+            'https://api.openweathermap.org/data/3.0/onecall',
         ),
         'api_key': os.environ.get('IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'),
-    }
+    },
 }
 
 # GIS config
