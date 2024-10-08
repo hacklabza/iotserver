@@ -100,6 +100,7 @@ sudo su - postgres
 createdb iotserver
 psql -d iotserver
 $postgres-# CREATE EXTENSION postgis;
+$postgres-# ALTER USER postgres WITH PASSWORD '<your-postgres-password>';
 ```
 
 ### Memcached Setup
