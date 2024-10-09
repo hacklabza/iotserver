@@ -6,7 +6,7 @@ After=network.target
 User=pi
 Group=pi
 WorkingDirectory=/home/pi/iotserver
-ExecStart=/home/pi/.local/bin/poetry run manage.py mqtt
+ExecStart=/home/pi/.local/bin/poetry run /home/pi/iotserver/manage.py mqtt
 
 [Install]
 WantedBy=multi-user.target

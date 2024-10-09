@@ -141,6 +141,7 @@ poetry install
 curl -#fLo- 'https://raw.githubusercontent.com/hyperupcall/autoenv/master/scripts/install.sh' | sh  # install autoenv - optional but recommended
 cp .env.example .env  # update as required
 cp manage.py ~/.local/bin/
+chmod +x ~/.local/bin/manage.py
 
 poetry run manage.py migrate
 poetry run manage.py collectstatic
