@@ -1,9 +1,10 @@
 from django.contrib import admin, messages
 from django.contrib.gis.db import models as gis_models
+from django.db import models
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
-from iotserver.apps.device import models
+from iotserver.apps.device import models, widgets
 
 
 def toggle_devices_on(modeladmin, request, queryset):
@@ -57,6 +58,7 @@ class DeviceModelAdmin(admin.ModelAdmin):
         'ip_address',
     )
     list_filter = ('active', 'type__name', 'location__name')
+    form_field_overrides = {models.JSONField: {'widget': widgets.PrettyJSONWidget}}
 
 
 @admin.register(models.DevicePin)
