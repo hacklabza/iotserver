@@ -16,7 +16,9 @@ Simple IoT Server, Configuration Tool & Dashboard
 ```bash
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
+brew bundle install  # On MacOS, see Brewfile - if you're not using docker compose
 pyenv local 3.10.*
+curl -sSL https://install.python-poetry.org | python3 -
 poetry install
 poetry run pre-commit install
 ```
@@ -44,7 +46,7 @@ To create a super user which you can use to populate your devices and users, exe
 
 ## Deployment (Docker)
 
-The recommended way to install the API and it's service dependancies is with docker, however the docker-compose config can also be used in development. I've found that this is best done if you're using a PC or Server.
+The recommended way to install the API and it's service dependancies is with docker, however the docker compose config can also be used in development. I've found that this is best done if you're using a PC or Server.
 
 **Doesn't play well with RPi!**
 
@@ -57,7 +59,7 @@ sudo apt install libffi-dev libssl-dev python3-dev python3 python3-pip git
 
 ### Docker Compose Setup
 
-#### Setting up docker
+#### Setting up docker on raspberry pi
 
 ```bash
 curl -fsSL test.docker.com -o get-docker.sh && sh get-docker.sh
@@ -66,7 +68,7 @@ sudo systemctl enable docker
 sudo reboot now  # or logout of the pi user account
 ```
 
-#### Setting up docker-compose, the project and environment
+#### Setting up docker compose, the project and environment
 
 ```bash
 pip3 install docker-compose

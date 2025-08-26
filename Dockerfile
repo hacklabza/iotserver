@@ -1,4 +1,4 @@
-FROM 3.10-bullseye
+FROM python:3.10-bookworm
 
 WORKDIR /usr/src/app
 
@@ -7,14 +7,8 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 
 ENV PATH="${PATH}:/root/.local/bin"
 
-COPY pyproject.toml /usr/src/app/pyproject.toml
-COPY poetry.lock /usr/src/app/poetry.lock
+COPY . /usr/src/app
+
 RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
-
-COPY entrypoint.sh /bin/entrypoint.sh
-COPY manage.py /bin/manage.py
-
-RUN chmod +x /bin/entrypoint.sh
-RUN chmod +x /bin/manage.py
 
 EXPOSE 8000

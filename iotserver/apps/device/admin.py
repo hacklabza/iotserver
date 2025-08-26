@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 from django.contrib.gis.db import models as gis_models
-from django.db import models
+from django.db.models import JSONField
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GooglePointFieldWidget
 
@@ -58,7 +58,7 @@ class DeviceModelAdmin(admin.ModelAdmin):
         'ip_address',
     )
     list_filter = ('active', 'type__name', 'location__name')
-    form_field_overrides = {models.JSONField: {'widget': widgets.PrettyJSONWidget}}
+    form_field_overrides = {JSONField: {'widget': widgets.PrettyJSONWidget}}
 
 
 @admin.register(models.DevicePin)

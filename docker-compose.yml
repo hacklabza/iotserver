@@ -6,7 +6,7 @@ services:
     image: ${DOCKER_POSTGIS_IMAGE}
     restart: unless-stopped
     volumes:
-       - postgres_data:/var/lib/postgresql/data
+       - iotserver_pg_data:/var/lib/postgresql/data
     container_name: iotserver-postgis
     ports:
       - "5432:5432"
@@ -81,7 +81,7 @@ services:
     command: ["./entrypoint.sh"]
 
 volumes:
-  postgres_data:
+  iotserver_pg_data:
     external: true
 
 networks:
