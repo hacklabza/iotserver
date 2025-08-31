@@ -9,7 +9,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -20,7 +19,6 @@ SECRET_KEY = os.environ.get('IOTSERVER_SECRET_KEY', 'insecure-secretkey')
 DEBUG = os.environ.get('IOTSERVER_DJANGO_DEBUG', '1') == '1'
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -74,7 +72,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'iotserver.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
@@ -96,7 +93,6 @@ CACHES = {
         'TIMEOUT': (60 * 60),  # 1 hour
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -129,14 +125,12 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Johannesburg'
 USE_I18N = True
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
@@ -148,6 +142,10 @@ CORS_ORIGIN_WHITELIST = os.environ.get(
     'IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'
 ).split(',')
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('IOTSERVER_CORS_ALLOW_ALL_ORIGINS') == '1'
+
+# Geodjango GDAL library path
+GDAL_LIBRARY_PATH = os.environ.get('IOTSERVER_GDAL_LIBRARY_PATH', None)
+GEOS_LIBRARY_PATH = os.environ.get('IOTSERVER_GEOS_LIBRARY_PATH', None)
 
 # MQTT settings
 MQTT = {

@@ -6,7 +6,7 @@ After=network.target
 User=pi
 Group=pi
 WorkingDirectory=/home/pi/iotserver
-ExecStart=/home/pi/.local/bin/poetry run gunicorn iotserver.wsgi:application -w 4 -b :8000 --reload
+ExecStart=/home/pi/.local/bin/poetry run gunicorn iotserver.wsgi:application -w 4 -b :8000
 
 [Install]
 WantedBy=multi-user.target

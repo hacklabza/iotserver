@@ -58,7 +58,7 @@ class DeviceModelAdmin(admin.ModelAdmin):
         'ip_address',
     )
     list_filter = ('active', 'type__name', 'location__name')
-    form_field_overrides = {JSONField: {'widget': widgets.PrettyJSONWidget}}
+    formfield_overrides = {JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}}
 
 
 @admin.register(models.DevicePin)

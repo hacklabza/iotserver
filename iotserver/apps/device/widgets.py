@@ -1,8 +1,15 @@
-class PrettyJSONWidget:
+import json
+
+from django.forms import Textarea
+
+
+class PrettyJSONWidget(Textarea):
+    """A widget that pretty-prints JSON data."""
     def format_value(self, value):
-        import json
+        if value == "" or value is None:
+            return None
         try:
             parsed = json.loads(value)
             return json.dumps(parsed, indent=4, sort_keys=True)
-        except (ValueError, TypeError):
+        except (TypeError, ValueError):
             return value
