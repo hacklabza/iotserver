@@ -58,7 +58,11 @@ class DeviceModelAdmin(admin.ModelAdmin):
         'ip_address',
     )
     list_filter = ('active', 'type__name', 'location__name')
-    formfield_overrides = {JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}}
+    formfield_overrides = {
+        JSONField: {
+            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
+        }
+    }
 
 
 @admin.register(models.DevicePin)
@@ -74,12 +78,22 @@ class DevicePinModelAdmin(admin.ModelAdmin):
     )
     list_filter = ('devices__name', 'active')
     prepopulated_fields = {'identifier': ('name',)}
+    formfield_overrides = {
+        JSONField: {
+            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
+        }
+    }
 
 
 @admin.register(models.DeviceStatus)
 class DeviceStatusModelAdmin(admin.ModelAdmin):
     list_display = ('device', 'created_at')
     list_filter = ('device__name', 'created_at')
+    formfield_overrides = {
+        JSONField: {
+            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
+        }
+    }
 
 
 @admin.register(models.DeviceHealth)
@@ -97,5 +111,7 @@ class DeviceHealthModelAdmin(admin.ModelAdmin):
 
 @admin.register(models.Location)
 class LocationModelAdmin(admin.ModelAdmin):
-    formfield_overrides = {gis_models.PointField: {'widget': GooglePointFieldWidget}}
+    formfield_overrides = {
+        gis_models.PointField: {'widget': GooglePointFieldWidget}
+    }
     list_display = ('name', 'position')
