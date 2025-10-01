@@ -29,7 +29,6 @@ router.register('users', user_viewsets.UserViewSet)
 
 # Health endpoint
 urlpatterns = [
-    path('health/<str:device_pk>/', health),
     path('health/', health),
 ]
 
