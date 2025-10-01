@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     # 3rd party apps
     'corsheaders',
     'django_filters',
+    'drf_spectacular',
     'mapwidgets',
     'rest_framework',
     'rest_framework_gis',
@@ -111,20 +112,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.OrderingFilter',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 50,
-}
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 LANGUAGE_CODE = 'en-us'
@@ -146,6 +133,31 @@ CORS_ALLOW_ALL_ORIGINS = os.environ.get('IOTSERVER_CORS_ALLOW_ALL_ORIGINS') == '
 # Geodjango GDAL library path
 GDAL_LIBRARY_PATH = os.environ.get('IOTSERVER_GDAL_LIBRARY_PATH', None)
 GEOS_LIBRARY_PATH = os.environ.get('IOTSERVER_GEOS_LIBRARY_PATH', None)
+
+# Django Rest Framework config
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.DjangoModelPermissions',),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Spectacular settings - OpenAPI 3
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'IoTServer API',
+    'DESCRIPTION': 'Simple IoT Server, Configuration Tool & Dashboard',
+    'VERSION': '0.9.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 # MQTT settings
 MQTT = {

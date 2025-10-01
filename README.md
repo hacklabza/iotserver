@@ -162,3 +162,6 @@ sudo systemctl enable iot.mqttsubscriber.service
 ### Make a SD Card Backup
 
 Read more here: https://howchoo.com/pi/create-a-backup-image-of-your-raspberry-pi-sd-card-in-mac-osx. this pretty useful as cards can become corrupt if power is cut or the device is not powered down correctly.
+
+## API Documentation
+The API documentation is available at `/api/schema/ui/` (Swagger) and `/api/schema/docs/` (Redoc) when the server is running.
