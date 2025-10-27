@@ -29,6 +29,7 @@ router.register('users', user_viewsets.UserViewSet)
 
 # Health endpoint
 urlpatterns = [
+    path('health/<str:device_pk>/', health),
     path('health/', health),
 ]
 
@@ -50,15 +51,6 @@ urlpatterns += [
     path('api/schema/ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='ui'),
     path('api/schema/docs/', SpectacularRedocView.as_view(url_name='schema'), name='docs'),
 ]
-
-# from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-# urlpatterns = [
-#     # YOUR PATTERNS
-#     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-#     # Optional UI:
-#     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-#     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
-# ]
 
 # Static files
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

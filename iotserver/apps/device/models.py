@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 
 from iotserver.apps.device import constants
-from iotserver.apps.device.utils import mqtt, webrepl
+from iotserver.apps.device.utils import mqtt, stats, webrepl
 
 
 class Location(models.Model):
@@ -89,7 +89,10 @@ class Device(models.Model):
 
     @cached_property
     def last_status(self):
-        return self.statuses.first()
+        return {
+            'status': self.statuses.first(),
+            'aggregates': stats.aggregate_statuses(self.statuses),
+        }
 
     def mqtt_toggle(self, state: str):
         mqtt.toggle(self.id, str(constants.DEVICE_TOGGLE_STATE[state]))

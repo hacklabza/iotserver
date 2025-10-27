@@ -25,7 +25,10 @@ class TestHealthView(object):
 
     def test_detail__device_id(self, api_client):
         response = api_client.get(f'{self.root_url}{self.device_health.device_id}/')
+
         return_data = response.json()
 
         assert response.status_code == 200
         assert return_data['status'] == 'ok'
+
+        assert self.device_health.updated_at != self.device_health.created_at

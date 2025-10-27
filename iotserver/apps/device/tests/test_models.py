@@ -38,7 +38,39 @@ class TestDeviceModel(object):
     def setup_method(self, test_method):
         self.device = device_factories.DeviceFactory()
         self.device_pin = device_factories.DevicePinFactory(devices=[self.device])
-        self.device_status = device_factories.DeviceStatusFactory(device=self.device)
+        self.device_statuses = [
+            device_factories.DeviceStatusFactory(
+                device=self.device,
+                status={
+                    'dht-sensor': {
+                        'humidity': 10,
+                        'temperature': 10
+                    },
+                    'light-sensor': 10
+                },
+            ),
+            device_factories.DeviceStatusFactory(
+                device=self.device,
+                status={
+                    'dht-sensor': {
+                        'humidity': 20,
+                        'temperature': 20
+                    },
+                    'light-sensor': 20
+                },
+            ),
+            device_factories.DeviceStatusFactory(
+                device=self.device,
+                status={
+                    'dht-sensor': {
+                        'humidity': 12,
+                        'temperature': 12
+                    },
+                    'light-sensor': 12
+                },
+            )
+        ]
+        self.device_status = self.device_statuses[2]
 
     def test_str(self):
         assert str(self.device) == self.device.name
@@ -53,7 +85,14 @@ class TestDeviceModel(object):
         }
 
     def test_last_status(self):
-        assert self.device.last_status.pk == self.device_status.pk
+        assert self.device.last_status['status'].pk == self.device_status.pk
+        assert self.device.last_status['aggregates'] == {
+            'dht-sensor': {
+                'humidity': {'minimum': 10, 'maximum': 20, 'average': 15},
+                'temperature': {'minimum': 10, 'maximum': 20, 'average': 15}
+            },
+            'light-sensor': {'minimum': 10, 'maximum': 20, 'average': 15}
+        }
 
     def test_mqtt_toggle(self, mocker):
         mock_mqtt_toggle = mocker.patch('iotserver.apps.device.models.mqtt.toggle')
