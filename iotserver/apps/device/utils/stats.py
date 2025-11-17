@@ -36,6 +36,8 @@ def aggregate_statuses(statuses: list[dict]) -> dict:
                         sum(values_for_avg[key][subkey]) / len(values_for_avg[key][subkey])
                     )
             else:
+                if not isinstance(value, (int, float)):
+                    continue
                 if key not in aggregates:
                     aggregates[key] = {'minimum': value, 'maximum': value}
                     values_for_avg[key] = [value]
