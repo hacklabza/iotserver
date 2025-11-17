@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import Any
 
 import paho.mqtt.client as mqtt
 from django.conf import settings
@@ -48,25 +49,35 @@ class Command(BaseCommand):
             )
         )
 
-    def mqtt_on_connect(self, client: mqtt.Client, *args, **kwargs) -> None:
+    def mqtt_on_connect(
+        self,
+        client: mqtt.Client,
+        userdata: Any,
+        flags: Any,
+        result_code: int
+    ) -> None:
         """
-        Callback for when the client connects to the MQTT broker.
+        The callback for when the client receives a CONNACK response from the server.
         """
         client.subscribe('iot-devices/#')
 
-    def mqtt_on_message(self, message: mqtt.MQTTMessage, *args, **kwargs) -> None:
+    def mqtt_on_message(
+        self,
+        client: mqtt.Client,
+        userdata: Any,
+        message: mqtt.MQTTMessage
+    ) -> None:
         """
-        Callback for when a message is received from the MQTT broker. Handles
-        status and log messages based on the topic.
+        The callback for when a PUBLISH message is received from the server.
         """
         if 'status' in message.topic:
             self.handle_status_queue(message)
         if 'logs' in message.topic:
             self.handle_log_queue(message)
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args, **options):
         """
-        Entry point for the command. Sets up the MQTT client and starts the loop.
+        Start the MQTT client and listen for messages from devices indefinitely.
         """
         client = mqtt.Client()
         client.on_connect = self.mqtt_on_connect
