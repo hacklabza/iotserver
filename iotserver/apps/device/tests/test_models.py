@@ -85,13 +85,16 @@ class TestDeviceModel(object):
         }
 
     def test_last_status(self):
-        assert self.device.last_status['status'].pk == self.device_status.pk
-        assert self.device.last_status['aggregates'] == {
+        assert self.device.last_status.pk == self.device_status.pk
+        assert self.device.last_status == self.device_statuses[2]
+
+    def test_aggregate_statuses(self):
+        assert self.device.aggregate_statuses == {
             'dht-sensor': {
-                'humidity': {'minimum': 10, 'maximum': 20, 'average': 15},
-                'temperature': {'minimum': 10, 'maximum': 20, 'average': 15}
+                'humidity': {'minimum': 10, 'maximum': 20, 'average': 14.0},
+                'temperature': {'minimum': 10, 'maximum': 20, 'average': 14.0}
             },
-            'light-sensor': {'minimum': 10, 'maximum': 20, 'average': 15}
+            'light-sensor': {'minimum': 10, 'maximum': 20, 'average': 14.0}
         }
 
     def test_mqtt_toggle(self, mocker):
