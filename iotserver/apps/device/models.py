@@ -89,10 +89,11 @@ class Device(models.Model):
 
     @cached_property
     def last_status(self):
-        return {
-            'status': self.statuses.first(),
-            'aggregates': stats.aggregate_statuses(self.statuses),
-        }
+        return self.statuses.first()
+
+    @cached_property
+    def aggregate_statuses(self):
+        return stats.aggregate_statuses(self.statuses)
 
     def mqtt_toggle(self, state: str):
         mqtt.toggle(self.id, str(constants.DEVICE_TOGGLE_STATE[state]))
