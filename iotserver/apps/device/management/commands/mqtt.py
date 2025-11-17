@@ -11,7 +11,11 @@ from iotserver.apps.device.models import Device, DeviceStatus
 class Command(BaseCommand):
     help = 'Run the mqtt client for devices.'
 
-    def handle_status_queue(self, message):
+    def handle_status_queue(self, message: mqtt.MQTTMessage) -> None:
+        """
+        Handle status messages from devices and creates a DeviceStatus entry in
+        the DB.
+        """
         device_id = message.topic.split('/')[1]
         try:
             device = Device.objects.get(id=device_id)
@@ -32,7 +36,10 @@ class Command(BaseCommand):
             )
         )
 
-    def handle_log_queue(self, message):
+    def handle_log_queue(self, message: mqtt.MQTTMessage) -> None:
+        """
+        Handle log messages from devices and log to the console.
+        """
         device_id = message.topic.split('/')[1]
         timestamp = datetime.now().strftime('%d/%b/%Y %H:%M:%S')
         self.stdout.write(
@@ -41,16 +48,26 @@ class Command(BaseCommand):
             )
         )
 
-    def mqtt_on_connect(self, client, userdata, flags, result_code):
+    def mqtt_on_connect(self, client: mqtt.Client, *args, **kwargs) -> None:
+        """
+        Callback for when the client connects to the MQTT broker.
+        """
         client.subscribe('iot-devices/#')
 
-    def mqtt_on_message(self, client, userdata, message):
+    def mqtt_on_message(self, message: mqtt.MQTTMessage, *args, **kwargs) -> None:
+        """
+        Callback for when a message is received from the MQTT broker. Handles
+        status and log messages based on the topic.
+        """
         if 'status' in message.topic:
             self.handle_status_queue(message)
         if 'logs' in message.topic:
             self.handle_log_queue(message)
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Entry point for the command. Sets up the MQTT client and starts the loop.
+        """
         client = mqtt.Client()
         client.on_connect = self.mqtt_on_connect
         client.on_message = self.mqtt_on_message

@@ -1,7 +1,7 @@
 from django.utils import timezone
 
 
-def aggregate_statuses(statuses):
+def aggregate_statuses(statuses: list[dict]) -> dict:
     """
     Returns device stats by minimum, maximum and average values for today.
     """
