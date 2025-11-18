@@ -2,6 +2,8 @@
 
 Simple IoT Server, Configuration Tool & Dashboard
 
+[![codecov](https://codecov.io/gh/hacklabza/iotserver/graph/badge.svg?token=BSVBAN7ZQ5)](https://codecov.io/gh/hacklabza/iotserver)
+
 ## Requirements
 
 - Python 3.9+
