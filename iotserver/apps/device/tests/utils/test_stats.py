@@ -36,5 +36,4 @@ class TestAggregateStatuses(object):
                 'reading-b': {'minimum': 15, 'maximum': 15, 'average': 15.0},
             },
             'sensor-b': {'minimum': 20, 'maximum': 40, 'average': 30.0},
-            'sensor-c': None,
         }

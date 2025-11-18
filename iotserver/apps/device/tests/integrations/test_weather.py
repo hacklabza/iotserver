@@ -3,18 +3,24 @@ import pytest
 from iotserver.apps.device.integrations.weather import Location, Weather
 
 
-@pytest.fixture()
-def mock_requests(mocker):
-    return mocker.patch('iotserver.apps.device.integrations.weather.requests')
-
-
 @pytest.fixture(autouse=True)
-def mock_get_response(mocker, mock_requests):
-    response = mocker.Mock()
-    response.json.return_value = []
-    response.status_code = 200
-    mock_requests.get.return_value = response
-    return response
+def mock_cache(mocker):
+    """Mock Django cache to return None (cache miss)"""
+    mock = mocker.patch('iotserver.apps.device.integrations.weather.cache')
+    mock.get.return_value = None
+    return mock
+
+
+@pytest.fixture
+def mock_requests(mocker):
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = []
+    mock_response.status_code = 200
+
+    mock_requests_module = mocker.patch('iotserver.apps.device.integrations.weather.requests')
+    mock_requests_module.get.return_value = mock_response
+
+    return mock_response
 
 
 @pytest.fixture
@@ -56,13 +62,12 @@ class TestWeatherIntegration(object):
     def test_build_url(self, weather):
         url = weather._build_url()
         assert (
-            'https://api.openweathermap.org/data/2.5/onecall?lat=-26.12345&lon=28.54321'
+            'https://api.openweathermap.org/data/3.0/onecall?lat=-26.12345&lon=28.54321'
             in url
         )
 
-    def test_current_weather(self, mock_get_response, weather, weather_data):
-        response = mock_get_response
-        response.json.return_value = weather_data
+    def test_current_weather(self, weather, weather_data, mock_requests):
+        mock_requests.json.return_value = weather_data
 
         data = weather.current
 
@@ -74,9 +79,8 @@ class TestWeatherIntegration(object):
         assert data['humidity'] == 50
         assert data['temperature'] == 25.12
 
-    def test_forecast_weather(self, mock_get_response, weather, weather_data):
-        response = mock_get_response
-        response.json.return_value = weather_data
+    def test_forecast_weather(self, weather, weather_data, mock_requests):
+        mock_requests.json.return_value = weather_data
 
         data = weather.forecast
 
