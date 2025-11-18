@@ -37,9 +37,7 @@ jobs:
         python-version: '3.10'
 
     - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gdal-bin libgdal-dev
+      run: sudo apt-get install -y gdal-bin libgdal-dev
 
     - name: Install Poetry
       uses: snok/install-poetry@v1
@@ -64,11 +62,9 @@ jobs:
 
     - name: Run tests with coverage
       env:
-        DB_NAME: test_iotserver
-        DB_USER: postgres
-        DB_PASSWORD: postgres
-        DB_HOST: localhost
-        DB_PORT: 5432
+        IOTSERVER_POSTGRES_DBNAME: test_iotserver
+        IOTSERVER_POSTGRES_USER: postgres
+        IOTSERVER_POSTGRES_PASSWORD: postgres
       run: poetry run pytest --cov --cov-branch --cov-report=xml
 
     - name: Upload coverage reports
