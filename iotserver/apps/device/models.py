@@ -35,6 +35,7 @@ class Location(models.Model):
 
 class DeviceType(models.Model):
     name = models.CharField(max_length=32)
+    identifier = models.SlugField(max_length=64, unique=True, null=True)
 
     def __str__(self):
         return self.name
@@ -99,6 +100,18 @@ class Device(models.Model):
         mqtt.toggle(self.id, str(constants.DEVICE_TOGGLE_STATE[state]))
 
 
+class DevicePinType(models.Model):
+    name = models.CharField(max_length=32)
+    identifier = models.SlugField(max_length=64, unique=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+    @cached_property
+    def resource_url(self):
+        return reverse('devicetype-detail', kwargs={'pk': self.pk})
+
+
 class DevicePin(models.Model):
     active = models.BooleanField(default=True)
 
@@ -107,6 +120,13 @@ class DevicePin(models.Model):
     name = models.CharField(max_length=32)
     identifier = models.SlugField(max_length=64, unique=True)
     pin_number = models.PositiveSmallIntegerField(blank=True, null=True)
+    type = models.ForeignKey(
+        DevicePinType,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='pins',
+    )
 
     interval = models.IntegerField(default=1)
     analog = models.BooleanField(default=False)

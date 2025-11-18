@@ -12,8 +12,15 @@ class LocationSerializer(gis_serializers.GeoModelSerializer):
 
 
 class DeviceTypeSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.DeviceType
+        fields = '__all__'
+
+
+class DevicePinTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.DevicePinType
         fields = '__all__'
 
 
@@ -21,6 +28,7 @@ class DevicePinSerializer(serializers.ModelSerializer):
     devices = serializers.PrimaryKeyRelatedField(
         many=True, queryset=models.Device.objects.all()
     )
+    type = DevicePinTypeSerializer(many=False, read_only=True)
 
     class Meta:
         model = models.DevicePin

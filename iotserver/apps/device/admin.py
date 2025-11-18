@@ -26,6 +26,7 @@ def toggle_devices_off(modeladmin, request, queryset):
 @admin.register(models.DeviceType)
 class DeviceTypeModelAdmin(admin.ModelAdmin):
     list_display = ('name',)
+    prepopulated_fields = {'identifier': ('name',)}
 
 
 @admin.register(models.Device)
@@ -63,6 +64,12 @@ class DeviceModelAdmin(admin.ModelAdmin):
             'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
         }
     }
+
+
+@admin.register(models.DevicePinType)
+class DevicePinTypeModelAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    prepopulated_fields = {'identifier': ('name',)}
 
 
 @admin.register(models.DevicePin)
