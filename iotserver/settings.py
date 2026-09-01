@@ -141,7 +141,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
-    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.DjangoModelPermissions',),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.DjangoModelPermissions',
+    ),
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.OrderingFilter',
@@ -189,6 +191,16 @@ INTEGRATIONS = {
             'https://api.openweathermap.org/data/3.0/onecall',
         ),
         'api_key': os.environ.get('IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'),
+    },
+    'solarman': {
+        'base_url': os.environ.get(
+            'IOTSERVER_SOLARMAN_BASE_URL',
+            'https://globalapi.solarmanpv.com',
+        ),
+        'email': os.environ.get('IOTSERVER_SOLARMAN_EMAIL', None),
+        'password': os.environ.get('IOTSERVER_SOLARMAN_PASSWORD', None),
+        'app_id': os.environ.get('IOTSERVER_SOLARMAN_APP_ID', None),
+        'app_secret': os.environ.get('IOTSERVER_SOLARMAN_APP_SECRET', None),
     },
 }
 
