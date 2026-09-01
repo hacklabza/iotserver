@@ -1,5 +1,5 @@
 [tool.black]
-target-version = ['py313']
+target-version = ['py310']
 include = '\.pyi?$'
 skip-string-normalization = true
 exclude = '''
@@ -36,7 +36,7 @@ psycopg = {extras = ["binary"], version = "^3.3.5"}
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"
 pytest-django = "^4.5.2"
-black = "^24.3.0"
+black = "^26.5.1"
 factory-boy = "^3.2.1"
 pre-commit = "^2.21.0"
 ipython = "^8.10.0"
