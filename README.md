@@ -6,7 +6,7 @@ Simple IoT Server, Configuration Tool & Dashboard
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - Git
 - Mosquitto
 - PostgreSQL
@@ -19,7 +19,7 @@ Simple IoT Server, Configuration Tool & Dashboard
 git clone https://github.com/hacklabza/iotserver.git
 cd iotserver/
 brew bundle install  # On MacOS, see Brewfile - if you're not using docker compose
-pyenv local 3.10.*
+pyenv local 3.13.*
 curl -sSL https://install.python-poetry.org | python3 -
 poetry install
 poetry run pre-commit install

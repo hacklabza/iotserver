@@ -1,5 +1,5 @@
 [tool.black]
-target-version = ['py39']
+target-version = ['py313']
 include = '\.pyi?$'
 skip-string-normalization = true
 exclude = '''
@@ -16,7 +16,7 @@ authors = ["Jonathan Bydendyk <jonathan@hacklab.co.za>"]
 license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.10,<4.0"
 Django = "^4.2.26"
 click = "^8.1.2"
 django-map-widgets = "^0.3.3"
@@ -26,12 +26,12 @@ paho-mqtt = "^1.6.1"
 requests = "^2.32.4"
 python-dotenv = "^0.20.0"
 pymemcache = "^3.5.2"
-psycopg2-binary = "^2.9.3"
 django-cors-headers = "^3.12.0"
 django-filter = "^22.1"
 gunicorn = "^22.0.0"
 cryptography = "^41.0.4"
 drf-spectacular = "^0.28.0"
+psycopg = {extras = ["binary"], version = "^3.3.5"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"

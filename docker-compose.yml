@@ -43,7 +43,7 @@ services:
     image: eclipse-mosquitto
     restart: unless-stopped
     volumes:
-      - ./docker/mqtt:/mosquitto/config/
+      - ./mosquitto.conf.example:/mosquitto/config/mosquitto.conf:ro
     container_name: iotserver-mqtt
     ports:
       - "1883:1883"
@@ -62,7 +62,10 @@ services:
       - .env
     environment:
       - IOTSERVER_DJANGO_DEBUG=1
+      - IOTSERVER_GDAL_LIBRARY_PATH=
+      - IOTSERVER_GEOS_LIBRARY_PATH=
       - IOTSERVER_POSTGRES_HOST=postgis
+      - IOTSERVER_POSTGRES_PASSWORD=${IOTSERVER_POSTGRES_PASSWORD}
       - IOTSERVER_MQTT_HOST=mqtt
       - IOTSERVER_MEMCACHED_LOCATION=memcached:11211
     depends_on:
