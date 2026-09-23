@@ -29,7 +29,9 @@ def mock_requests(mocker):
     mock_response.json.return_value = []
     mock_response.status_code = 200
 
-    mock_requests_module = mocker.patch('iotserver.apps.device.integrations.weather.requests')
+    mock_requests_module = mocker.patch(
+        'iotserver.apps.device.integrations.weather.requests'
+    )
     mock_requests_module.get.return_value = mock_response
     mock_requests_module.response = mock_response
 
@@ -104,7 +106,9 @@ class TestWeatherIntegration(object):
         mock_cache.set.assert_not_called()
 
     def test_http_errors_are_propagated(self, weather, mock_requests):
-        mock_requests.response.raise_for_status.side_effect = RuntimeError('API failure')
+        mock_requests.response.raise_for_status.side_effect = RuntimeError(
+            'API failure'
+        )
 
         with pytest.raises(RuntimeError, match='API failure'):
             weather._get_weather_data()
@@ -114,7 +118,7 @@ class TestWeatherIntegration(object):
 
         data = weather.current
 
-        assert type(data) == dict
+        assert isinstance(data, dict)
         for key in ['humidity', 'rain', 'temperature']:
             assert key in data
 
@@ -137,7 +141,9 @@ class TestWeatherIntegration(object):
 
         assert weather.current is None
 
-    def test_current_weather_returns_none_for_empty_response(self, weather, mock_requests):
+    def test_current_weather_returns_none_for_empty_response(
+        self, weather, mock_requests
+    ):
         assert weather.current is None
 
     def test_forecast_weather(self, weather, weather_data, mock_requests):
@@ -145,7 +151,7 @@ class TestWeatherIntegration(object):
 
         data = weather.forecast
 
-        assert type(data) == list
+        assert isinstance(data, list)
         assert len(data) == 2
         for key in ['date', 'humidity', 'rain', 'temperature']:
             for item in data:
@@ -170,7 +176,9 @@ class TestWeatherIntegration(object):
         assert weather.forecast[0]['humidity'] is None
         assert not weather.forecast[0]['rain']
 
-    def test_malformed_forecast_returns_none(self, weather, weather_data, mock_requests):
+    def test_malformed_forecast_returns_none(
+        self, weather, weather_data, mock_requests
+    ):
         weather_data['daily'][0]['temp'] = {}
         mock_requests.response.json.return_value = weather_data
 

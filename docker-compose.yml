@@ -21,7 +21,7 @@ services:
         aliases:
           - postgis
     healthcheck:
-      test: "PGPASSWORD=${IOTSERVER_POSTGRES_PASSWORD} pg_isready -h 127.0.0.1 -U ${IOTSERVER_POSTGRES_USER} -d ${IOTSERVER_POSTGRES_DBNAME}"
+      test: "pg_isready -h 127.0.0.1 -U ${IOTSERVER_POSTGRES_USER} -d ${IOTSERVER_POSTGRES_DBNAME}"
       interval: 5s
       timeout: 5s
       retries: 5

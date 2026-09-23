@@ -12,7 +12,6 @@ class LocationSerializer(gis_serializers.GeoModelSerializer):
 
 
 class DeviceTypeSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = models.DeviceType
         fields = '__all__'

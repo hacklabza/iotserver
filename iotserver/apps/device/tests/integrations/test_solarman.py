@@ -102,4 +102,4 @@ class TestSolarmanIntegration(object):
         )
 
         with pytest.raises(RuntimeError, match='real time fetch failed'):
-            solarman.real_time
+            _ = solarman.real_time

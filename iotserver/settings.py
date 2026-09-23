@@ -125,7 +125,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 # CORS Setup
-CORS_ORIGIN_WHITELIST = os.environ.get(
+CORS_ALLOWED_ORIGINS = os.environ.get(
     'IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'
 ).split(',')
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('IOTSERVER_CORS_ALLOW_ALL_ORIGINS') == '1'
@@ -206,18 +206,18 @@ INTEGRATIONS = {
 
 # GIS config
 MAP_WIDGETS = {
-    'GooglePointFieldWidget': (
-        ('zoom', 15),
-        ('mapCenterLocation', [-26.190, 28.050]),
-        (
-            'GooglePlaceAutocompleteOptions',
-            {'componentRestrictions': {'country': 'za'}},
-        ),
-        ('markerFitZoom', 12),
-    ),
-    'GOOGLE_MAP_API_KEY': os.environ.get(
-        'IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'
-    ),
+    'GoogleMap': {
+        'apiKey': os.environ.get('IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'),
+        'PointField': {
+            'interactive': {
+                'mapOptions': {'zoom': 15, 'center': [-26.190, 28.050]},
+                'GooglePlaceAutocompleteOptions': {
+                    'componentRestrictions': {'country': 'za'}
+                },
+                'markerFitZoom': 12,
+            }
+        },
+    },
 }
 
 # Device syncing

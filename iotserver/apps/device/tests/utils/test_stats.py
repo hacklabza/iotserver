@@ -9,7 +9,7 @@ class TestAggregateStatuses(object):
         self.location = device_factories.DeviceFactory()
 
     def test_aggregate_statuses(self):
-        statuses = [
+        _ = [
             device_factories.DeviceStatusFactory(
                 device=self.location,
                 status={

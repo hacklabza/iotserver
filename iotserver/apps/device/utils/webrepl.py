@@ -43,6 +43,7 @@ class WebSocket:
     """
     Simple WebSocket implementation for WebREPL protocol.
     """
+
     def __init__(self, _socket: socket.socket) -> None:
         self.socket = _socket
         self.buffer = b''
@@ -209,11 +210,7 @@ def get_file(ws: WebSocket, local_file: str, remote_file: str) -> None:
     assert read_resp(ws) == 0
 
 
-def get_websocket(
-    host: str,
-    port: int,
-    passwd: str
-) -> tuple[socket.socket, WebSocket]:
+def get_websocket(host: str, port: int, passwd: str) -> tuple[socket.socket, WebSocket]:
     """
     Establish a websocket connection to the given host and port using the
     provided password.

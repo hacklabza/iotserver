@@ -21,7 +21,7 @@ def aggregate_statuses(statuses: list[dict]) -> dict:
                     if subkey not in aggregates[key]:
                         aggregates[key][subkey] = {
                             'minimum': subvalue,
-                            'maximum': subvalue
+                            'maximum': subvalue,
                         }
                         values_for_avg[key][subkey] = [subvalue]
                     else:
@@ -32,9 +32,9 @@ def aggregate_statuses(statuses: list[dict]) -> dict:
                             aggregates[key][subkey]['maximum'], subvalue
                         )
                         values_for_avg[key][subkey].append(subvalue)
-                    aggregates[key][subkey]['average'] = (
-                        sum(values_for_avg[key][subkey]) / len(values_for_avg[key][subkey])
-                    )
+                    aggregates[key][subkey]['average'] = sum(
+                        values_for_avg[key][subkey]
+                    ) / len(values_for_avg[key][subkey])
             else:
                 if isinstance(value, bool) or not isinstance(value, (int, float)):
                     continue
@@ -45,6 +45,8 @@ def aggregate_statuses(statuses: list[dict]) -> dict:
                     aggregates[key]['minimum'] = min(aggregates[key]['minimum'], value)
                     aggregates[key]['maximum'] = max(aggregates[key]['maximum'], value)
                     values_for_avg[key].append(value)
-                aggregates[key]['average'] = sum(values_for_avg[key]) / len(values_for_avg[key])
+                aggregates[key]['average'] = sum(values_for_avg[key]) / len(
+                    values_for_avg[key]
+                )
 
     return aggregates

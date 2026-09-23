@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.contrib.gis.db import models as gis_models
 from django.db.models import JSONField
 from django.utils.safestring import mark_safe
-from mapwidgets.widgets import GooglePointFieldWidget
+from mapwidgets.widgets import GoogleMapPointFieldWidget
 
 from iotserver.apps.device import models, widgets
 
@@ -60,9 +60,7 @@ class DeviceModelAdmin(admin.ModelAdmin):
     )
     list_filter = ('active', 'type__name', 'location__name')
     formfield_overrides = {
-        JSONField: {
-            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
-        }
+        JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
     }
 
 
@@ -86,9 +84,7 @@ class DevicePinModelAdmin(admin.ModelAdmin):
     list_filter = ('devices__name', 'active')
     prepopulated_fields = {'identifier': ('name',)}
     formfield_overrides = {
-        JSONField: {
-            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
-        }
+        JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
     }
 
 
@@ -97,9 +93,7 @@ class DeviceStatusModelAdmin(admin.ModelAdmin):
     list_display = ('device', 'created_at')
     list_filter = ('device__name', 'created_at')
     formfield_overrides = {
-        JSONField: {
-            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
-        }
+        JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
     }
 
 
@@ -118,7 +112,5 @@ class DeviceHealthModelAdmin(admin.ModelAdmin):
 
 @admin.register(models.Location)
 class LocationModelAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        gis_models.PointField: {'widget': GooglePointFieldWidget}
-    }
+    formfield_overrides = {gis_models.PointField: {'widget': GoogleMapPointFieldWidget}}
     list_display = ('name', 'position')

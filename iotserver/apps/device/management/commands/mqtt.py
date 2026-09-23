@@ -53,8 +53,9 @@ class Command(BaseCommand):
         self,
         client: mqtt.Client,
         userdata: Any,
-        flags: Any,
-        result_code: int
+        connect_flags: Any,
+        reason_code: Any,
+        properties: Any,
     ) -> None:
         """
         The callback for when the client receives a CONNACK response from the server.
@@ -62,10 +63,7 @@ class Command(BaseCommand):
         client.subscribe('iot-devices/#')
 
     def mqtt_on_message(
-        self,
-        client: mqtt.Client,
-        userdata: Any,
-        message: mqtt.MQTTMessage
+        self, client: mqtt.Client, userdata: Any, message: mqtt.MQTTMessage
     ) -> None:
         """
         The callback for when a PUBLISH message is received from the server.
@@ -79,7 +77,7 @@ class Command(BaseCommand):
         """
         Start the MQTT client and listen for messages from devices indefinitely.
         """
-        client = mqtt.Client()
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         client.on_connect = self.mqtt_on_connect
         client.on_message = self.mqtt_on_message
 
