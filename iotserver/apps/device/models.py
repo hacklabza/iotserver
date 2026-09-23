@@ -52,6 +52,7 @@ class Device(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     active = models.BooleanField(default=False)
+    managed_firmware = models.BooleanField(default=True)
 
     name = models.CharField(max_length=128)
     description = models.CharField(max_length=1024)
@@ -205,7 +206,7 @@ class DeviceHealth(models.Model):
 @receiver(pre_save, sender=Device)
 def handle_device_default_config(sender, instance, *args, **kwargs):
     """Get the config from the new device and update the config field."""
-    if settings.AUTO_SYNC_DEVICE:
+    if settings.AUTO_SYNC_DEVICE and instance.managed_firmware and instance.active:
         if instance.config is None:
             temp_file_path = f'/tmp/config.{instance.id}.json'
             with open(temp_file_path, 'w') as input_file:
@@ -232,7 +233,7 @@ def handle_device_default_config(sender, instance, *args, **kwargs):
 @receiver(post_save, sender=Device)
 def handle_device_config_update(sender, instance, *args, **kwargs):
     """Update config on the physical device via webrepl."""
-    if settings.AUTO_SYNC_DEVICE:
+    if settings.AUTO_SYNC_DEVICE and instance.managed_firmware:
         temp_file_path = f'/tmp/config.{instance.id}.json'
         with open(temp_file_path, 'w') as input_file:
             input_file.write(json.dumps(instance.full_config, indent=4))
