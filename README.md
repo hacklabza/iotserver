@@ -6,7 +6,7 @@ Simple IoT Server, Configuration Tool & Dashboard
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.13+
 - Git
 - Mosquitto
 - PostgreSQL
