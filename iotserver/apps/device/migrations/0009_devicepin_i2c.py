@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('device', '0008_alter_devicestatus_options_devicepin_display'),
     ]

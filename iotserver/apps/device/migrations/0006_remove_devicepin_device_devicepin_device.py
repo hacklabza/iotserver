@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('device', '0005_alter_device_hostname_alter_device_ip_address_and_more'),
     ]

@@ -5,7 +5,7 @@ from django.urls import include, path
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
-    SpectacularSwaggerView
+    SpectacularSwaggerView,
 )
 from rest_framework import routers
 
@@ -48,8 +48,12 @@ urlpatterns += [
 # DRF spectacular schema
 urlpatterns += [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='ui'),
-    path('api/schema/docs/', SpectacularRedocView.as_view(url_name='schema'), name='docs'),
+    path(
+        'api/schema/ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='ui'
+    ),
+    path(
+        'api/schema/docs/', SpectacularRedocView.as_view(url_name='schema'), name='docs'
+    ),
 ]
 
 # Static files

@@ -42,33 +42,24 @@ class TestDeviceModel(object):
             device_factories.DeviceStatusFactory(
                 device=self.device,
                 status={
-                    'dht-sensor': {
-                        'humidity': 10,
-                        'temperature': 10
-                    },
-                    'light-sensor': 10
+                    'dht-sensor': {'humidity': 10, 'temperature': 10},
+                    'light-sensor': 10,
                 },
             ),
             device_factories.DeviceStatusFactory(
                 device=self.device,
                 status={
-                    'dht-sensor': {
-                        'humidity': 20,
-                        'temperature': 20
-                    },
-                    'light-sensor': 20
+                    'dht-sensor': {'humidity': 20, 'temperature': 20},
+                    'light-sensor': 20,
                 },
             ),
             device_factories.DeviceStatusFactory(
                 device=self.device,
                 status={
-                    'dht-sensor': {
-                        'humidity': 12,
-                        'temperature': 12
-                    },
-                    'light-sensor': 12
+                    'dht-sensor': {'humidity': 12, 'temperature': 12},
+                    'light-sensor': 12,
                 },
-            )
+            ),
         ]
         self.device_status = self.device_statuses[2]
 
@@ -92,9 +83,9 @@ class TestDeviceModel(object):
         assert self.device.aggregate_statuses == {
             'dht-sensor': {
                 'humidity': {'minimum': 10, 'maximum': 20, 'average': 14.0},
-                'temperature': {'minimum': 10, 'maximum': 20, 'average': 14.0}
+                'temperature': {'minimum': 10, 'maximum': 20, 'average': 14.0},
             },
-            'light-sensor': {'minimum': 10, 'maximum': 20, 'average': 14.0}
+            'light-sensor': {'minimum': 10, 'maximum': 20, 'average': 14.0},
         }
 
     def test_mqtt_toggle(self, mocker):
