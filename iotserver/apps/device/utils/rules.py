@@ -1,7 +1,19 @@
+import hashlib
+import json
+import logging
+import threading
+
+import paho.mqtt.client as mqtt
 import requests
 from django.utils import timezone
 
 from iotserver.apps.device.integrations.sonoff import Sonoff
+
+logger = logging.getLogger(__name__)
+
+# Ordering (not alphabetical) matches the IoTDevice firmware's LOG_LEVELS so the
+# same `logging.level` config value has the same meaning on both sides.
+LOG_LEVELS = ['info', 'debug', 'warning', 'error']
 
 CONDITION_OPERATORS = {
     'eq': lambda input, value: input == value,
@@ -112,3 +124,152 @@ def sonoff_toggle(**kwargs):
     device_id = kwargs.get('device_id')
     state = Sonoff(device_id).toggle_device('on' if on else 'off')
     return value_to_bool(state)
+
+
+# Explicit whitelist of callable rule actions, rather than `getattr` on this
+# module, so `rule['action']` (data, not code) can't invoke arbitrary attributes.
+RULE_ACTIONS = {
+    'timer': timer,
+    'service': service,
+    'mqtt_toggle': mqtt_toggle,
+    'sonoff_toggle': sonoff_toggle,
+}
+
+
+def _build_mqtt_client(mqtt_config, on_connect, on_message):
+    """
+    Builds, connects, and starts the network loop for a device's persistent MQTT
+    client.
+    """
+    client = mqtt.Client(
+        mqtt.CallbackAPIVersion.VERSION2, client_id=mqtt_config['client_id']
+    )
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    username = mqtt_config.get('username')
+    if username:
+        client.username_pw_set(username, mqtt_config.get('password'))
+
+    if mqtt_config.get('ssl_enabled'):
+        client.tls_set()
+
+    lastwill = mqtt_config.get('lastwill')
+    if lastwill:
+        client.will_set(topic=lastwill['topic'], payload=lastwill['message'])
+
+    client.connect(host=mqtt_config['host'], port=mqtt_config.get('port', 1883))
+    client.loop_start()
+
+    return client
+
+
+def _resolve_rule_params(rule, rule_values, mqtt_values):
+    """
+    Resolves a rule's `input` into keyword arguments, evaluating any must/should
+    conditions against previously collected rule values.
+    """
+    rule_params = {}
+    for key, value in rule['input'].items():
+        if isinstance(value, dict) and 'conditions' in value:
+            condition_values = handle_conditions(rule_values, value)
+            rule_params[key] = any(
+                [all(condition_values['must']), any(condition_values['should'])]
+            )
+        else:
+            rule_params[key] = value
+
+    if rule['action'] == 'mqtt_toggle':
+        rule_params['mqtt_values'] = mqtt_values
+
+    return rule_params
+
+
+def _publish_status(client, device_id, rule_values, previous_status_hash):
+    """
+    Publishes the current rule values as the device status if they've changed
+    since the last publish, returning the new dedup hash.
+    """
+    payload = json.dumps(rule_values, sort_keys=True)
+    status_hash = hashlib.sha1(payload.encode()).digest()
+
+    if status_hash != previous_status_hash:
+        client.publish(f'iot-devices/{device_id}/status', payload)
+
+    return status_hash
+
+
+def _publish_log(client, device_id, logging_config, level, message):
+    """
+    Logs locally and, if the configured logging level permits it, publishes the
+    message to the device's log topic for ingestion by the `mqtt` command.
+    """
+    getattr(logger, level, logger.info)(message)
+
+    threshold = logging_config.get('level', 'warning')
+    if LOG_LEVELS.index(level) >= LOG_LEVELS.index(threshold):
+        client.publish(f'iot-devices/{device_id}/logs', message)
+
+
+def run_device(device, stop_event: threading.Event) -> None:
+    """
+    Runs the rules engine loop for a single non-managed-firmware device until
+    `stop_event` is set. Mirrors the IoTDevice firmware's main loop, but drives
+    the device over HTTP/MQTT (via its own config) instead of local GPIO pins.
+    """
+    config = device.full_config
+    device_id = str(device.id)
+
+    mqtt_values = {}
+    mqtt_topics = [
+        pin['rule']['input']['topic']
+        for pin in config['pins']
+        if pin['rule']['action'] == 'mqtt_toggle'
+    ]
+
+    def on_connect(client, userdata, connect_flags, reason_code, properties):
+        for topic in mqtt_topics:
+            client.subscribe(topic)
+
+    def on_message(client, userdata, message):
+        mqtt_values[message.topic] = message.payload.decode('utf-8')
+
+    client = _build_mqtt_client(config['mqtt'], on_connect, on_message)
+
+    rule_values = {}
+    previous_status_hash = None
+    run_count = 0
+
+    try:
+        while not stop_event.is_set():
+            try:
+                requests.get(config['health']['url'], timeout=10)
+
+                for pin in config['pins']:
+                    if run_count % pin.get('interval', 1):
+                        continue
+
+                    rule = pin['rule']
+                    rule_params = _resolve_rule_params(rule, rule_values, mqtt_values)
+                    rule_values[pin['identifier']] = RULE_ACTIONS[rule['action']](
+                        **rule_params
+                    )
+
+                previous_status_hash = _publish_status(
+                    client, device_id, rule_values, previous_status_hash
+                )
+            except Exception:
+                logger.exception('Error running rules for device %s', device_id)
+                _publish_log(
+                    client,
+                    device_id,
+                    config['logging'],
+                    'error',
+                    f'Error running rules for device {device_id}',
+                )
+
+            run_count += 1
+            stop_event.wait(config['main']['process_interval'])
+    finally:
+        client.loop_stop()
+        client.disconnect()
