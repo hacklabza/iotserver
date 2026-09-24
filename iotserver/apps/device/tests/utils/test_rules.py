@@ -267,6 +267,23 @@ class TestResolveRuleParams:
 
         assert result == {'device_id': 'abc123', 'on': True}
 
+    def test_evaluates_should_only_conditions(self):
+        rule = {
+            'action': 'sonoff_toggle',
+            'input': {
+                'device_id': 'abc123',
+                'on': {
+                    'conditions': {
+                        'should': {'mqtt-toggle': {'operator': 'eq', 'value': True}}
+                    }
+                },
+            },
+        }
+
+        result = rules._resolve_rule_params(rule, {'mqtt-toggle': False}, {})
+
+        assert result == {'device_id': 'abc123', 'on': False}
+
     def test_injects_mqtt_values_for_mqtt_toggle_action(self):
         rule = {'action': 'mqtt_toggle', 'input': {'topic': 'iot-devices/x/toggle'}}
         mqtt_values = {'iot-devices/x/toggle': '1'}
