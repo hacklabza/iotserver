@@ -183,9 +183,8 @@ def _resolve_rule_params(rule, rule_values, mqtt_values):
     for key, value in rule['input'].items():
         if isinstance(value, dict) and 'conditions' in value:
             condition_values = handle_conditions(rule_values, value)
-            must, should = condition_values['must'], condition_values['should']
-            rule_params[key] = (all(must) if must else False) or (
-                any(should) if should else False
+            rule_params[key] = any(
+                [all(condition_values['must']), any(condition_values['should'])]
             )
         else:
             rule_params[key] = value
