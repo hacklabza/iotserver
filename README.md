@@ -153,12 +153,15 @@ poetry run manage.py createsuperuser
 
 sudo cp systemd/iot.api.service /etc/systemd/system/iot.api.service
 sudo cp systemd/iot.mqttsubscriber.service /etc/systemd/system/iot.mqttsubscriber.service
+sudo cp systemd/iot.rulesengine.service /etc/systemd/system/iot.rulesengine.service
 
 sudo systemctl start iot.api.service
 sudo systemctl start iot.mqttsubscriber.service
+sudo systemctl start iot.rulesengine.service
 
 sudo systemctl enable iot.api.service
 sudo systemctl enable iot.mqttsubscriber.service
+sudo systemctl enable iot.rulesengine.service
 ```
 
 ### Make a SD Card Backup
