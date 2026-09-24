@@ -52,11 +52,11 @@ def evaluate_condition(input, operator, value):
 
 def handle_conditions(rule_values, input_value):
     """
-    Returns a dict of `must`/`should` condition boolean lists to be evaluated.
-    `rule_values` is flat, keyed by either a pin identifier or, for `service`
-    rule fields, the full dotted xpath referenced by the condition.
+    Returns a dict of `must`/`should`/`override` condition boolean lists to be
+    evaluated. `rule_values` is flat, keyed by either a pin identifier or,
+    for `service` rule fields, the full dotted xpath referenced by the condition.
     """
-    condition_values = {'must': [], 'should': []}
+    condition_values = {'must': [], 'should': [], 'override': []}
     for condition_type, conditions in input_value['conditions'].items():
         if condition_type in condition_values:
             for xpath, condition in conditions.items():
@@ -184,10 +184,8 @@ def _resolve_rule_params(rule, rule_values, mqtt_values):
         if isinstance(value, dict) and 'conditions' in value:
             condition_values = handle_conditions(rule_values, value)
             must, should = condition_values['must'], condition_values['should']
-            # Absent must/should clauses are vacuously satisfied so a rule with
-            # only one of the two still evaluates on that clause alone.
-            rule_params[key] = (all(must) if must else True) and (
-                any(should) if should else True
+            rule_params[key] = (all(must) if must else False) or (
+                any(should) if should else False
             )
         else:
             rule_params[key] = value
