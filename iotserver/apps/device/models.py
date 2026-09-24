@@ -203,6 +203,24 @@ class DeviceHealth(models.Model):
         return self.updated_at > timezone.now() - timezone.timedelta(minutes=1)
 
 
+class SonoffToken(models.Model):
+    """Singleton row holding the eWeLink OAuth token pair for the Sonoff integration."""
+
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    access_token_expires_at = models.DateTimeField()
+    refresh_token_expires_at = models.DateTimeField()
+    region = models.CharField(max_length=8)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Sonoff Token'
+
+    def __str__(self):
+        return f'Sonoff token ({self.region})'
+
+
 @receiver(pre_save, sender=Device)
 def handle_device_default_config(sender, instance, *args, **kwargs):
     """Get the config from the managed new device and update the config field."""

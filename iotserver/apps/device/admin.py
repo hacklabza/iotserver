@@ -133,3 +133,26 @@ class DeviceHealthModelAdmin(admin.ModelAdmin):
 class LocationModelAdmin(admin.ModelAdmin):
     formfield_overrides = {gis_models.PointField: {'widget': GoogleMapPointFieldWidget}}
     list_display = ('name', 'position')
+
+
+@admin.register(models.SonoffToken)
+class SonoffTokenModelAdmin(admin.ModelAdmin):
+    """Read-only view of the OAuth token; connect via /integrations/sonoff/authorize/."""
+
+    list_display = (
+        'region',
+        'access_token_expires_at',
+        'refresh_token_expires_at',
+        'updated_at',
+    )
+    readonly_fields = (
+        'access_token',
+        'refresh_token',
+        'access_token_expires_at',
+        'refresh_token_expires_at',
+        'region',
+        'updated_at',
+    )
+
+    def has_add_permission(self, request):
+        return False

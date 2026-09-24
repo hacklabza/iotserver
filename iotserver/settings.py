@@ -170,19 +170,28 @@ MQTT = {
 # Integration config
 INTEGRATIONS = {
     'sonoff': {
-        'auth_url': os.environ.get(
-            'IOTSERVER_SONOFF_AUTH_URL',
-            'https://eu-api.coolkit.cc:8080/api/user/login',
-        ),
-        'email': os.environ.get('IOTSERVER_SONOFF_EMAIL', None),
-        'password': os.environ.get('IOTSERVER_SONOFF_PASSWORD', None),
-        'region': os.environ.get('IOTSERVER_SONOFF_REGION', 'eu'),
-        'country_code': os.environ.get('IOTSERVER_SONOFF_COUNTRY_CODE', '+27'),
         'app_id': os.environ.get('IOTSERVER_SONOFF_APP_ID', None),
         'app_secret': os.environ.get('IOTSERVER_SONOFF_APP_SECRET', None),
+        'region': os.environ.get('IOTSERVER_SONOFF_REGION', 'eu'),
+        'redirect_url': os.environ.get(
+            'IOTSERVER_SONOFF_REDIRECT_URL',
+            'http://localhost:8000/integrations/sonoff/callback/',
+        ),
+        'authorize_url': os.environ.get(
+            'IOTSERVER_SONOFF_AUTHORIZE_URL',
+            'https://c2ccdn.coolkit.cc/oauth/index.html',
+        ),
+        'token_url': os.environ.get(
+            'IOTSERVER_SONOFF_TOKEN_URL',
+            'https://eu-apia.coolkit.cc/v2/user/oauth/token',
+        ),
+        'refresh_url': os.environ.get(
+            'IOTSERVER_SONOFF_REFRESH_URL',
+            'https://eu-apia.coolkit.cc/v2/user/refresh',
+        ),
         'device_url': os.environ.get(
             'IOTSERVER_SONOFF_DEVICE_URL',
-            'https://eu-api.coolkit.cc:8080/api/user/device/status',
+            'https://eu-apia.coolkit.cc/v2/device/thing/status',
         ),
     },
     'weather': {

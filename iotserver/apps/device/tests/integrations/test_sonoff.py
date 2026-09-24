@@ -2,10 +2,13 @@ import base64
 import hashlib
 import hmac
 import json
+from datetime import timedelta
 
 import pytest
+from django.utils import timezone
 
-from iotserver.apps.device.integrations.sonoff import Sonoff
+from iotserver.apps.device.integrations.sonoff import Sonoff, SonoffNotAuthorizedError
+from iotserver.apps.device.models import SonoffToken
 
 
 @pytest.fixture(autouse=True)
@@ -13,13 +16,14 @@ def mock_settings(mocker):
     mock = mocker.patch('iotserver.apps.device.integrations.sonoff.settings')
     mock.INTEGRATIONS = {
         'sonoff': {
-            'auth_url': 'https://example.com/auth',
-            'email': 'user@example.com',
-            'password': 'password',
-            'country_code': '+27',
             'app_id': 'app-id',
             'app_secret': 'app-secret',
-            'device_url': 'https://example.com/device',
+            'region': 'eu',
+            'redirect_url': 'https://example.com/callback/',
+            'authorize_url': 'https://example.com/authorize',
+            'token_url': 'https://example.com/v2/user/oauth/token',
+            'refresh_url': 'https://example.com/v2/user/refresh',
+            'device_url': 'https://example.com/v2/device/thing/status',
         }
     }
     return mock
@@ -32,17 +36,16 @@ def sonoff():
 
 @pytest.fixture
 def mock_requests(mocker):
-    auth_response = mocker.Mock()
-    auth_response.json.return_value = {'at': 'access-token'}
-    device_response = mocker.Mock()
+    response = mocker.Mock()
+    response.json.return_value = {'error': 0, 'msg': '', 'data': {}}
 
     mock = mocker.patch('iotserver.apps.device.integrations.sonoff.requests')
-    mock.post.side_effect = [auth_response, device_response]
-    mock.auth_response = auth_response
-    mock.device_response = device_response
+    mock.post.return_value = response
+    mock.response = response
     return mock
 
 
+@pytest.mark.django_db
 class TestSonoffIntegration(object):
     def test_sign_request(self, sonoff):
         data = {'deviceid': 'device-id', 'params': {'switch': 'on'}}
@@ -63,86 +66,163 @@ class TestSonoffIntegration(object):
         assert sonoff._generate_nonce() == 'AbCdEfGh'
         assert choice.call_count == 8
 
-    def test_authenticate(self, sonoff, mock_requests, mocker):
+    def test_authorize_url(self, sonoff, mocker):
+        mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
+        mocker.patch(
+            'iotserver.apps.device.integrations.sonoff.timezone.now',
+            return_value=timezone.datetime(
+                2024, 1, 1, tzinfo=timezone.get_current_timezone()
+            ),
+        )
+
+        url = sonoff.authorize_url('state-123')
+
+        assert url.startswith('https://example.com/authorize?')
+        assert 'clientId=app-id' in url
+        assert 'state=state-123' in url
+        assert 'redirectUrl=' in url
+
+    def test_exchange_code(self, sonoff, mock_requests, mocker):
         mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
         sign_request = mocker.patch.object(
             sonoff, '_sign_request', return_value='signed'
         )
-        mocker.patch(
-            'iotserver.apps.device.integrations.sonoff.time.time', return_value=123.4
-        )
+        mock_requests.response.json.return_value = {
+            'error': 0,
+            'msg': '',
+            'data': {
+                'accessToken': 'access-token',
+                'atExpiredTime': 1704110400000,
+                'refreshToken': 'refresh-token',
+                'rtExpiredTime': 1706788800000,
+            },
+        }
 
-        assert sonoff._authenticate() == 'access-token'
+        sonoff.exchange_code('auth-code')
+
         expected_data = {
-            'appid': 'app-id',
-            'countryCode': '+27',
-            'email': 'user@example.com',
-            'password': 'password',
-            'ts': 123.4,
-            'version': 8,
-            'nonce': 'nonce123',
+            'code': 'auth-code',
+            'redirectUrl': 'https://example.com/callback/',
+            'grantType': 'authorization_code',
         }
         sign_request.assert_called_once_with(expected_data)
         mock_requests.post.assert_called_once_with(
-            url='https://example.com/auth',
+            url='https://example.com/v2/user/oauth/token',
             json=expected_data,
-            headers={'Authorization': 'Sign signed'},
+            headers={
+                'X-CK-Appid': 'app-id',
+                'X-CK-Nonce': 'nonce123',
+                'Authorization': 'Sign signed',
+                'Content-Type': 'application/json',
+            },
         )
-        mock_requests.auth_response.raise_for_status.assert_called_once_with()
+        token = SonoffToken.objects.get()
+        assert token.access_token == 'access-token'
+        assert token.refresh_token == 'refresh-token'
+        assert token.region == 'eu'
 
-    def test_authentication_http_error_is_propagated(
-        self, sonoff, mock_requests, mocker
-    ):
-        mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
-        mock_requests.auth_response.raise_for_status.side_effect = RuntimeError(
-            'authentication failed'
-        )
+    def test_exchange_code_error_response_is_raised(self, sonoff, mock_requests):
+        mock_requests.response.json.return_value = {
+            'error': 10001,
+            'msg': 'invalid code',
+            'data': {},
+        }
 
-        with pytest.raises(RuntimeError, match='authentication failed'):
-            sonoff._authenticate()
+        with pytest.raises(RuntimeError, match='invalid code'):
+            sonoff.exchange_code('auth-code')
 
-    def test_missing_access_token_is_propagated(self, sonoff, mock_requests, mocker):
-        mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
-        mock_requests.auth_response.json.return_value = {}
-
-        with pytest.raises(KeyError, match='at'):
-            sonoff._authenticate()
+    def test_toggle_device_not_authorized(self, sonoff):
+        with pytest.raises(SonoffNotAuthorizedError):
+            sonoff.toggle_device('on')
 
     @pytest.mark.parametrize('state', ['on', 'off'])
     def test_toggle_device(self, sonoff, mock_requests, mocker, state):
-        authenticate = mocker.patch.object(
-            sonoff, '_authenticate', return_value='access-token'
+        SonoffToken.objects.create(
+            access_token='access-token',
+            refresh_token='refresh-token',
+            access_token_expires_at=timezone.now() + timedelta(days=1),
+            refresh_token_expires_at=timezone.now() + timedelta(days=30),
+            region='eu',
         )
-        sonoff.nonce = 'nonce123'
-        mocker.patch(
-            'iotserver.apps.device.integrations.sonoff.time.time', return_value=456.7
-        )
-        mock_requests.post.side_effect = None
-        mock_requests.post.return_value = mock_requests.device_response
+        mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
 
         assert sonoff.toggle_device(state) == state
-        authenticate.assert_called_once_with()
         mock_requests.post.assert_called_once_with(
-            url='https://example.com/device',
+            url='https://example.com/v2/device/thing/status',
             json={
-                'deviceid': 'device-id',
+                'type': 1,
+                'id': 'device-id',
                 'params': {'switch': state},
-                'appid': 'app-id',
-                'ts': 456.7,
-                'version': 8,
-                'nonce': 'nonce123',
             },
-            headers={'Authorization': 'Bearer access-token'},
+            headers={
+                'X-CK-Appid': 'app-id',
+                'X-CK-Nonce': 'nonce123',
+                'Authorization': 'Bearer access-token',
+                'Content-Type': 'application/json',
+            },
         )
-        mock_requests.device_response.raise_for_status.assert_called_once_with()
+        mock_requests.response.raise_for_status.assert_called_once_with()
 
-    def test_toggle_http_error_is_propagated(self, sonoff, mock_requests, mocker):
-        mocker.patch.object(sonoff, '_authenticate', return_value='access-token')
-        mock_requests.post.side_effect = None
-        mock_requests.post.return_value = mock_requests.device_response
-        mock_requests.device_response.raise_for_status.side_effect = RuntimeError(
+    def test_toggle_device_refreshes_expired_token(self, sonoff, mock_requests, mocker):
+        SonoffToken.objects.create(
+            access_token='old-access-token',
+            refresh_token='old-refresh-token',
+            access_token_expires_at=timezone.now() - timedelta(minutes=1),
+            refresh_token_expires_at=timezone.now() + timedelta(days=30),
+            region='eu',
+        )
+        mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
+        mocker.patch.object(sonoff, '_sign_request', return_value='signed')
+
+        refresh_response = mocker.Mock()
+        refresh_response.json.return_value = {
+            'error': 0,
+            'msg': '',
+            'data': {'at': 'new-access-token', 'rt': 'new-refresh-token'},
+        }
+        device_response = mocker.Mock()
+        device_response.json.return_value = {'error': 0, 'msg': '', 'data': {}}
+        mock_requests.post.side_effect = [refresh_response, device_response]
+
+        assert sonoff.toggle_device('on') == 'on'
+
+        token = SonoffToken.objects.get()
+        assert token.access_token == 'new-access-token'
+        assert token.refresh_token == 'new-refresh-token'
+
+        device_call = mock_requests.post.call_args_list[1]
+        assert (
+            device_call.kwargs['headers']['Authorization'] == 'Bearer new-access-token'
+        )
+
+    def test_toggle_http_error_is_propagated(self, sonoff, mock_requests):
+        SonoffToken.objects.create(
+            access_token='access-token',
+            refresh_token='refresh-token',
+            access_token_expires_at=timezone.now() + timedelta(days=1),
+            refresh_token_expires_at=timezone.now() + timedelta(days=30),
+            region='eu',
+        )
+        mock_requests.response.raise_for_status.side_effect = RuntimeError(
             'toggle failed'
         )
 
         with pytest.raises(RuntimeError, match='toggle failed'):
+            sonoff.toggle_device('on')
+
+    def test_toggle_error_response_is_raised(self, sonoff, mock_requests):
+        SonoffToken.objects.create(
+            access_token='access-token',
+            refresh_token='refresh-token',
+            access_token_expires_at=timezone.now() + timedelta(days=1),
+            refresh_token_expires_at=timezone.now() + timedelta(days=30),
+            region='eu',
+        )
+        mock_requests.response.json.return_value = {
+            'error': 30022,
+            'msg': 'device is offline',
+            'data': {},
+        }
+
+        with pytest.raises(RuntimeError, match='device is offline'):
             sonoff.toggle_device('on')
