@@ -81,7 +81,7 @@ class Device(models.Model):
     def resource_url(self):
         return reverse('device-detail', kwargs={'pk': str(self.id)})
 
-    @cached_property
+    @property
     def full_config(self):
         config = self.config
         config['pins'] = [
