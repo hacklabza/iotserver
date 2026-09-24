@@ -1,0 +1,12 @@
+[Unit]
+Description=rules engine daemon
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/iotserver
+ExecStart=/home/pi/.local/bin/poetry run /home/pi/iotserver/manage.py rules
+
+[Install]
+WantedBy=multi-user.target
