@@ -53,17 +53,15 @@ def evaluate_condition(input, operator, value):
 def handle_conditions(rule_values, input_value):
     """
     Returns a dict of `must`/`should` condition boolean lists to be evaluated.
+    `rule_values` is flat, keyed by either a pin identifier or, for `service`
+    rule fields, the full dotted xpath referenced by the condition.
     """
     condition_values = {'must': [], 'should': []}
     for condition_type, conditions in input_value['conditions'].items():
         if condition_type in condition_values:
-            for pin_identifier, condition in conditions.items():
-                xpaths = pin_identifier.split('.')
-                xpaths.reverse()
+            for xpath, condition in conditions.items():
                 condition_values[condition_type].append(
-                    evaluate_condition(
-                        find_xpath_value(rule_values, xpaths), **condition
-                    )
+                    evaluate_condition(rule_values.get(xpath), **condition)
                 )
 
     return condition_values
@@ -94,16 +92,28 @@ def timer(**kwargs):
 
 def service(**kwargs):
     """
-    Calls a web service and returns its JSON response.
+    Calls a web service and returns its JSON response. If `fields` (a list of
+    dotted paths) is given, only those values are returned, keyed by their
+    path, so the whole payload isn't persisted as device status.
     """
     url = kwargs.get('url')
     auth_header = kwargs.get('auth_header')
+    fields = kwargs.get('fields')
     headers = {'Authorization': f'Token {auth_header}'} if auth_header else None
 
     response = requests.get(url, headers=headers)
     response.raise_for_status()
+    payload = response.json()
 
-    return response.json()
+    if not fields:
+        return payload
+
+    extracted = {}
+    for field in fields:
+        xpaths = field.split('.')
+        xpaths.reverse()
+        extracted[field] = find_xpath_value(payload, xpaths)
+    return extracted
 
 
 def mqtt_toggle(**kwargs):
@@ -254,9 +264,18 @@ def run_device(device, stop_event: threading.Event) -> None:
 
                     rule = pin['rule']
                     rule_params = _resolve_rule_params(rule, rule_values, mqtt_values)
-                    rule_values[pin['identifier']] = RULE_ACTIONS[rule['action']](
-                        **rule_params
-                    )
+                    value = RULE_ACTIONS[rule['action']](**rule_params)
+                    if rule['action'] == 'service' and rule['input'].get('fields'):
+                        # value is keyed by field path; namespace it under the
+                        # pin's identifier to match how conditions reference it.
+                        rule_values.update(
+                            {
+                                f"{pin['identifier']}.{field}": field_value
+                                for field, field_value in value.items()
+                            }
+                        )
+                    else:
+                        rule_values[pin['identifier']] = value
 
                 previous_status_hash = _publish_status(
                     client, device_id, rule_values, previous_status_hash

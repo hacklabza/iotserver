@@ -43,7 +43,7 @@ class TestEvaluateCondition:
 def test_handle_conditions_returns_must_and_should_booleans():
     rule_values = {
         'timer': True,
-        'weather-service-current': {'rain': False},
+        'weather-service-current.rain': False,
         'mqtt-toggle': True,
     }
     input_value = {
@@ -137,6 +137,32 @@ class TestService:
         rules.service(url='http://example.com')
 
         mock_requests.get.assert_called_once_with('http://example.com', headers=None)
+
+    def test_extracts_only_configured_fields(self, mocker):
+        mock_requests = mocker.patch('iotserver.apps.device.utils.rules.requests')
+        mock_requests.get.return_value.json.return_value = {
+            'last_status': {'status': {'light-sensor': 19.8, 'other': 'x'}}
+        }
+
+        result = rules.service(
+            url='http://example.com',
+            fields=['last_status.status.light-sensor'],
+        )
+
+        assert result == {'last_status.status.light-sensor': 19.8}
+
+    def test_extracts_none_for_missing_field(self, mocker):
+        mock_requests = mocker.patch('iotserver.apps.device.utils.rules.requests')
+        mock_requests.get.return_value.json.return_value = {
+            'last_status': {'status': {}}
+        }
+
+        result = rules.service(
+            url='http://example.com',
+            fields=['last_status.status.light-sensor'],
+        )
+
+        assert result == {'last_status.status.light-sensor': None}
 
 
 class TestMqttToggle:
@@ -449,3 +475,72 @@ class TestRunDevice:
         on_connect(mock_client, None, None, None, None)
 
         mock_client.subscribe.assert_called_once_with('iot-devices/device-1/toggle')
+
+    def test_service_rule_only_stores_configured_fields(self, mocker):
+        stop_event = threading.Event()
+        mock_client = mocker.Mock()
+        mocker.patch(
+            'iotserver.apps.device.utils.rules._build_mqtt_client',
+            return_value=mock_client,
+        )
+        mocker.patch('iotserver.apps.device.utils.rules.requests.get')
+        mock_publish_status = mocker.patch(
+            'iotserver.apps.device.utils.rules._publish_status',
+            side_effect=lambda *a, **k: stop_event.set(),
+        )
+        # RULE_ACTIONS binds the action functions directly, so patching the
+        # module-level names doesn't affect dispatch -- patch the dict instead.
+        mocker.patch.dict(
+            'iotserver.apps.device.utils.rules.RULE_ACTIONS',
+            {
+                'service': mocker.Mock(
+                    return_value={'last_status.status.light-sensor': 19.8}
+                ),
+                'sonoff_toggle': mocker.Mock(return_value=False),
+            },
+        )
+
+        device = self._device(
+            mocker,
+            pins=[
+                {
+                    'identifier': 'light-sensor-service',
+                    'interval': 1,
+                    'rule': {
+                        'action': 'service',
+                        'input': {
+                            'url': 'http://x/',
+                            'fields': ['last_status.status.light-sensor'],
+                        },
+                    },
+                },
+                {
+                    'identifier': 'sonoff-switch',
+                    'interval': 1,
+                    'rule': {
+                        'action': 'sonoff_toggle',
+                        'input': {
+                            'device_id': 'abc123',
+                            'on': {
+                                'conditions': {
+                                    'must': {
+                                        'light-sensor-service.last_status.status.light-sensor': {
+                                            'operator': 'lt',
+                                            'value': 20,
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                    },
+                },
+            ],
+        )
+
+        rules.run_device(device, stop_event)
+
+        rule_values = mock_publish_status.call_args[0][2]
+        assert rule_values == {
+            'light-sensor-service.last_status.status.light-sensor': 19.8,
+            'sonoff-switch': False,
+        }
