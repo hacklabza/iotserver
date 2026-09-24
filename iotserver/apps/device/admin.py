@@ -33,7 +33,19 @@ class DeviceTypeModelAdmin(admin.ModelAdmin):
 class DeviceModelAdmin(admin.ModelAdmin):
     actions = [toggle_devices_on, toggle_devices_off]
     fieldsets = (
-        (None, {'fields': ('active', 'name', 'description', 'type', 'location')}),
+        (
+            None,
+            {
+                'fields': (
+                    'active',
+                    'managed_firmware',
+                    'name',
+                    'description',
+                    'type',
+                    'location',
+                )
+            },
+        ),
         (
             'Advanced options',
             {
@@ -53,12 +65,13 @@ class DeviceModelAdmin(admin.ModelAdmin):
         'name',
         'description',
         'active',
+        'managed_firmware',
         'created_at',
         'type',
         'location',
         'ip_address',
     )
-    list_filter = ('active', 'type__name', 'location__name')
+    list_filter = ('active', 'managed_firmware', 'type__name', 'location__name')
     formfield_overrides = {
         JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
     }
