@@ -4,7 +4,7 @@ from django.db.models import JSONField
 from django.utils.safestring import mark_safe
 from mapwidgets.widgets import GoogleMapPointFieldWidget
 
-from iotserver.apps.device import models, widgets
+from iotserver.apps.device import exceptions, models, widgets
 
 
 def toggle_devices_on(modeladmin, request, queryset):
@@ -75,6 +75,12 @@ class DeviceModelAdmin(admin.ModelAdmin):
     formfield_overrides = {
         JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
     }
+
+    def save_model(self, request, obj, form, change):
+        try:
+            super().save_model(request, obj, form, change)
+        except exceptions.DeviceUnreachableError as error:
+            messages.add_message(request, level=messages.WARNING, message=str(error))
 
 
 @admin.register(models.DevicePinType)

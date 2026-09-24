@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from iotserver.apps.device import constants
+from iotserver.apps.device import constants, exceptions
 from iotserver.apps.device.utils import mqtt, stats, webrepl
 
 
@@ -212,11 +212,18 @@ def handle_device_default_config(sender, instance, *args, **kwargs):
             with open(temp_file_path, 'w') as input_file:
                 input_file.write('')
 
-            _socket, web_socket = webrepl.get_websocket(
-                instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
-            )
-            webrepl.get_file(web_socket, temp_file_path, 'config/config.json')
-            _socket.close()
+            try:
+                _socket, web_socket = webrepl.get_websocket(
+                    instance.ip_address,
+                    settings.WEBREPL_PORT,
+                    settings.WEBREPL_PASSWORD,
+                )
+                webrepl.get_file(web_socket, temp_file_path, 'config/config.json')
+                _socket.close()
+            except OSError as error:
+                raise exceptions.DeviceUnreachableError(
+                    f"Device '{instance.name}' at {instance.ip_address} is unreachable."
+                ) from error
 
             with open(temp_file_path, 'r') as input_file:
                 device_config = json.loads(input_file.read())
@@ -238,8 +245,13 @@ def handle_device_config_update(sender, instance, *args, **kwargs):
         with open(temp_file_path, 'w') as input_file:
             input_file.write(json.dumps(instance.full_config, indent=4))
 
-        _socket, web_socket = webrepl.get_websocket(
-            instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
-        )
-        webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
-        _socket.close()
+        try:
+            _socket, web_socket = webrepl.get_websocket(
+                instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+            )
+            webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
+            _socket.close()
+        except OSError as error:
+            raise exceptions.DeviceUnreachableError(
+                f"Device '{instance.name}' at {instance.ip_address} is unreachable."
+            ) from error

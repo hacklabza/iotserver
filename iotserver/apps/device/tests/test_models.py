@@ -3,6 +3,7 @@ import json
 import pytest
 
 from iotserver.apps.device import models
+from iotserver.apps.device.exceptions import DeviceUnreachableError
 from iotserver.apps.device.tests import factories as device_factories
 
 
@@ -124,6 +125,22 @@ class TestDeviceModel(object):
         )
         assert self.device.config == {'main': {'identifier': str(self.device.id)}}
 
+    def test_handle_device_default_config_unreachable(self, settings, mocker):
+        settings.AUTO_SYNC_DEVICE = True
+        self.device.managed_firmware = True
+        self.device.active = True
+        self.device.config = None
+
+        mocker.patch(
+            'iotserver.apps.device.models.webrepl.get_websocket',
+            side_effect=OSError,
+        )
+
+        with pytest.raises(DeviceUnreachableError):
+            models.handle_device_default_config(
+                sender=models.Device, instance=self.device
+            )
+
     def test_handle_device_config_update(self, settings, mocker):
         settings.AUTO_SYNC_DEVICE = True
         self.device.managed_firmware = True
@@ -146,6 +163,21 @@ class TestDeviceModel(object):
             f'/tmp/config.{self.device.id}.json',
             'config/config.json',
         )
+
+    def test_handle_device_config_update_unreachable(self, settings, mocker):
+        settings.AUTO_SYNC_DEVICE = True
+        self.device.managed_firmware = True
+        self.device.config = {'main': {}}
+
+        mocker.patch(
+            'iotserver.apps.device.models.webrepl.get_websocket',
+            side_effect=OSError,
+        )
+
+        with pytest.raises(DeviceUnreachableError):
+            models.handle_device_config_update(
+                sender=models.Device, instance=self.device
+            )
 
 
 @pytest.mark.django_db
