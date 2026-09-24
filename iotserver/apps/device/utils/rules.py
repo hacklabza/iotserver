@@ -52,11 +52,11 @@ def evaluate_condition(input, operator, value):
 
 def handle_conditions(rule_values, input_value):
     """
-    Returns a dict of `must`/`should`/`override` condition boolean lists to be
+    Returns a dict of `must`/`should` condition boolean lists to be
     evaluated. `rule_values` is flat, keyed by either a pin identifier or,
     for `service` rule fields, the full dotted xpath referenced by the condition.
     """
-    condition_values = {'must': [], 'should': [], 'override': []}
+    condition_values = {'must': [], 'should': []}
     for condition_type, conditions in input_value['conditions'].items():
         if condition_type in condition_values:
             for xpath, condition in conditions.items():
