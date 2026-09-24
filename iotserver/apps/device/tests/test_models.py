@@ -141,6 +141,20 @@ class TestDeviceModel(object):
                 sender=models.Device, instance=self.device
             )
 
+    def test_handle_device_default_config_unmanaged(self, settings):
+        settings.AUTO_SYNC_DEVICE = True
+        self.device.managed_firmware = False
+        self.device.config = None
+
+        models.handle_device_default_config(sender=models.Device, instance=self.device)
+
+        expected_config = json.loads(
+            json.dumps(settings.DEVICE_DEFAULT_CONFIG).replace(
+                '{identifier}', str(self.device.id)
+            )
+        )
+        assert self.device.config == expected_config
+
     def test_handle_device_config_update(self, settings, mocker):
         settings.AUTO_SYNC_DEVICE = True
         self.device.managed_firmware = True

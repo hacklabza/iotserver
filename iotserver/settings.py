@@ -226,3 +226,28 @@ AUTO_SYNC_DEVICE = os.environ.get('IOTSERVER_AUTO_SYNC_DEVICE', '0') == '1'
 # Webrepl config
 WEBREPL_PORT = os.environ.get('IOTSERVER_WEBREPL_PORT', 8266)
 WEBREPL_PASSWORD = os.environ.get('IOTSERVER_WEBREPL_PASSWORD', 'webrepl-password')
+
+# Default config generated for devices with unmanaged firmware
+DEVICE_HEALTH_URL = os.environ.get(
+    'IOTSERVER_DEVICE_HEALTH_URL', 'http://localhost:8000/health/{identifier}/'
+)
+DEVICE_DEFAULT_CONFIG = {
+    'mqtt': {
+        'client_id': '{identifier}',
+        'host': MQTT['host'],
+        'username': None,
+        'password': None,
+        'ssl_enabled': False,
+        'lastwill': {
+            'topic': 'iot-devices/{identifier}/logs',
+            'message': 'Device disconnected from MQTT',
+        },
+    },
+    'logging': {'level': 'warning'},
+    'main': {
+        'identifier': '{identifier}',
+        'process_interval': 15,
+    },
+    'health': {'url': DEVICE_HEALTH_URL},
+    'pins': [],
+}

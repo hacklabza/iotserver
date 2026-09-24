@@ -64,7 +64,7 @@ class Device(models.Model):
         null=True,
         related_name='devices',
     )
-    location = models.OneToOneField(
+    location = models.ForeignKey(
         Location, on_delete=models.SET_NULL, blank=True, null=True
     )
 
@@ -205,7 +205,7 @@ class DeviceHealth(models.Model):
 
 @receiver(pre_save, sender=Device)
 def handle_device_default_config(sender, instance, *args, **kwargs):
-    """Get the config from the new device and update the config field."""
+    """Get the config from the managed new device and update the config field."""
     if settings.AUTO_SYNC_DEVICE and instance.managed_firmware and instance.active:
         if instance.config is None:
             temp_file_path = f'/tmp/config.{instance.id}.json'
@@ -236,11 +236,18 @@ def handle_device_default_config(sender, instance, *args, **kwargs):
 
                 instance.config = device_config
 
+    elif instance.config is None and not instance.managed_firmware:
+        instance.config = json.loads(
+            json.dumps(settings.DEVICE_DEFAULT_CONFIG).replace(
+                '{identifier}', str(instance.id)
+            )
+        )
+
 
 @receiver(post_save, sender=Device)
 def handle_device_config_update(sender, instance, *args, **kwargs):
-    """Update config on the physical device via webrepl."""
-    if settings.AUTO_SYNC_DEVICE and instance.managed_firmware:
+    """Update config on the managed physical device via webrepl."""
+    if settings.AUTO_SYNC_DEVICE and instance.managed_firmware and instance.active:
         temp_file_path = f'/tmp/config.{instance.id}.json'
         with open(temp_file_path, 'w') as input_file:
             input_file.write(json.dumps(instance.full_config, indent=4))
