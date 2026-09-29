@@ -183,8 +183,9 @@ def _resolve_rule_params(rule, rule_values, mqtt_values):
     for key, value in rule['input'].items():
         if isinstance(value, dict) and 'conditions' in value:
             condition_values = handle_conditions(rule_values, value)
+            must, should = condition_values['must'], condition_values['should']
             rule_params[key] = all(
-                [all(condition_values['must']), any(condition_values['should'])]
+                [all(must if must else [True]), any(should if should else [True])]
             )
         else:
             rule_params[key] = value
@@ -253,14 +254,19 @@ def run_device(device, stop_event: threading.Event) -> None:
     try:
         while not stop_event.is_set():
             try:
+                # Perform a health check for the device before processing rules.
                 requests.get(config['health']['url'], timeout=10)
 
                 for pin in config['pins']:
+                    # Skip this pin if the current run count does not align with
+                    # its interval.
                     if run_count % pin.get('interval', 1):
                         continue
 
+                    # Get the resolved rule parameters for this pin.
                     rule = pin['rule']
                     rule_params = _resolve_rule_params(rule, rule_values, mqtt_values)
+
                     value = RULE_ACTIONS[rule['action']](**rule_params)
                     if rule['action'] == 'service' and rule['input'].get('fields'):
                         # value is keyed by field path; namespace it under the
@@ -287,8 +293,10 @@ def run_device(device, stop_event: threading.Event) -> None:
                     f'Error running rules for device {device_id}',
                 )
 
+            # Increment the run count and wait for the next processing interval.
             run_count += 1
             stop_event.wait(config['main']['process_interval'])
+
     finally:
         client.loop_stop()
         client.disconnect()

@@ -24,6 +24,7 @@ def mock_settings(mocker):
             'token_url': 'https://example.com/v2/user/oauth/token',
             'refresh_url': 'https://example.com/v2/user/refresh',
             'device_url': 'https://example.com/v2/device/thing/status',
+            'cache_timeout': 60,
         }
     }
     return mock
@@ -42,6 +43,14 @@ def mock_requests(mocker):
     mock = mocker.patch('iotserver.apps.device.integrations.sonoff.requests')
     mock.post.return_value = response
     mock.response = response
+    return mock
+
+
+@pytest.fixture(autouse=True)
+def mock_cache(mocker):
+    """Mock Django cache to return None (cache miss)"""
+    mock = mocker.patch('iotserver.apps.device.integrations.sonoff.cache')
+    mock.get.return_value = None
     return mock
 
 
@@ -131,12 +140,13 @@ class TestSonoffIntegration(object):
         with pytest.raises(RuntimeError, match='invalid code'):
             sonoff.exchange_code('auth-code')
 
-    def test_toggle_device_not_authorized(self, sonoff):
+    def test_toggle_device_not_authorized(self, sonoff, mock_cache):
+        mock_cache.get.return_value = 'off'
         with pytest.raises(SonoffNotAuthorizedError):
             sonoff.toggle_device('on')
 
     @pytest.mark.parametrize('state', ['on', 'off'])
-    def test_toggle_device(self, sonoff, mock_requests, mocker, state):
+    def test_toggle_device(self, sonoff, mock_requests, mocker, state, mock_cache):
         SonoffToken.objects.create(
             access_token='access-token',
             refresh_token='refresh-token',
@@ -145,6 +155,7 @@ class TestSonoffIntegration(object):
             region='eu',
         )
         mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
+        mock_cache.get.return_value = 'off' if state == 'on' else 'on'
 
         assert sonoff.toggle_device(state) == state
         mock_requests.post.assert_called_once_with(
@@ -163,7 +174,9 @@ class TestSonoffIntegration(object):
         )
         mock_requests.response.raise_for_status.assert_called_once_with()
 
-    def test_toggle_device_refreshes_expired_token(self, sonoff, mock_requests, mocker):
+    def test_toggle_device_refreshes_expired_token(
+        self, sonoff, mock_requests, mocker, mock_cache
+    ):
         SonoffToken.objects.create(
             access_token='old-access-token',
             refresh_token='old-refresh-token',
@@ -173,6 +186,7 @@ class TestSonoffIntegration(object):
         )
         mocker.patch.object(sonoff, '_generate_nonce', return_value='nonce123')
         mocker.patch.object(sonoff, '_sign_request', return_value='signed')
+        mock_cache.get.return_value = 'off'
 
         refresh_response = mocker.Mock()
         refresh_response.json.return_value = {
@@ -195,7 +209,7 @@ class TestSonoffIntegration(object):
             device_call.kwargs['headers']['Authorization'] == 'Bearer new-access-token'
         )
 
-    def test_toggle_http_error_is_propagated(self, sonoff, mock_requests):
+    def test_toggle_http_error_is_propagated(self, sonoff, mock_requests, mock_cache):
         SonoffToken.objects.create(
             access_token='access-token',
             refresh_token='refresh-token',
@@ -206,11 +220,12 @@ class TestSonoffIntegration(object):
         mock_requests.response.raise_for_status.side_effect = RuntimeError(
             'toggle failed'
         )
+        mock_cache.get.return_value = 'off'
 
         with pytest.raises(RuntimeError, match='toggle failed'):
             sonoff.toggle_device('on')
 
-    def test_toggle_error_response_is_raised(self, sonoff, mock_requests):
+    def test_toggle_error_response_is_raised(self, sonoff, mock_requests, mock_cache):
         SonoffToken.objects.create(
             access_token='access-token',
             refresh_token='refresh-token',
@@ -218,6 +233,7 @@ class TestSonoffIntegration(object):
             refresh_token_expires_at=timezone.now() + timedelta(days=30),
             region='eu',
         )
+        mock_cache.get.return_value = 'off'
         mock_requests.response.json.return_value = {
             'error': 30022,
             'msg': 'device is offline',
@@ -226,3 +242,13 @@ class TestSonoffIntegration(object):
 
         with pytest.raises(RuntimeError, match='device is offline'):
             sonoff.toggle_device('on')
+
+    def test_toggle_cache(self, mocker, sonoff, mock_requests, mock_cache):
+        mock_cache.get.return_value = 'on'
+        mocker_get_access_token = mocker.patch(
+            'iotserver.apps.device.integrations.sonoff.Sonoff._get_access_token'
+        )
+
+        assert sonoff.toggle_device('on') == 'on'
+        mock_requests.post.assert_not_called()
+        mocker_get_access_token.assert_not_called()

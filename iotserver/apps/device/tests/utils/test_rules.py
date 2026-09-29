@@ -39,29 +39,28 @@ class TestEvaluateCondition:
     def test_returns_false_on_type_error(self):
         assert rules.evaluate_condition(None, 'gt', 3) is False
 
-
-def test_handle_conditions_returns_must_and_should_booleans():
-    rule_values = {
-        'timer': True,
-        'weather-service-current.rain': False,
-        'mqtt-toggle': True,
-    }
-    input_value = {
-        'conditions': {
-            'must': {
-                'timer': {'operator': 'eq', 'value': True},
-                'weather-service-current.rain': {'operator': 'eq', 'value': False},
-            },
-            'should': {
-                'mqtt-toggle': {'operator': 'eq', 'value': True},
-            },
+    def test_handle_conditions_returns_must_and_should_booleans(self):
+        rule_values = {
+            'timer': True,
+            'weather-service-current.rain': False,
+            'mqtt-toggle': True,
         }
-    }
+        input_value = {
+            'conditions': {
+                'must': {
+                    'timer': {'operator': 'eq', 'value': True},
+                    'weather-service-current.rain': {'operator': 'eq', 'value': False},
+                },
+                'should': {
+                    'mqtt-toggle': {'operator': 'eq', 'value': True},
+                },
+            }
+        }
 
-    assert rules.handle_conditions(rule_values, input_value) == {
-        'must': [True, True],
-        'should': [True],
-    }
+        assert rules.handle_conditions(rule_values, input_value) == {
+            'must': [True, True],
+            'should': [True],
+        }
 
 
 class TestValueToBool:

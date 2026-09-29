@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
 
 from iotserver.apps.device.models import SonoffToken
@@ -39,6 +40,7 @@ class Sonoff(object):
     def __init__(self, device_id: str = None) -> None:
         self.config = settings.INTEGRATIONS['sonoff']
         self.device_id = device_id
+        self.cache_prefix = f'{self.__module__}.{self.__class__.__name__}'
 
     def _sign(self, message: str) -> str:
         """
@@ -186,10 +188,15 @@ class Sonoff(object):
 
     def toggle_device(self, state: str) -> str:
         """
-        Toggle the device state, valid states are [on, off].
+        Toggle the device state, valid states are [on, off]. The state is
+        cached to prevent redundant API calls.
         """
-        access_token = self._get_access_token()
+        cache_key = f'{self.cache_prefix}.toggle_device:{self.device_id}'
+        previous_state = cache.get(cache_key)
+        if previous_state == state:
+            return state
 
+        access_token = self._get_access_token()
         request_data = {
             'type': 1,
             'id': self.device_id,
@@ -204,4 +211,5 @@ class Sonoff(object):
         response.raise_for_status()
         self._unwrap(response)
 
+        cache.set(cache_key, state, timeout=self.config['cache_timeout'])
         return state

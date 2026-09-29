@@ -193,6 +193,7 @@ INTEGRATIONS = {
             'IOTSERVER_SONOFF_DEVICE_URL',
             'https://eu-apia.coolkit.cc/v2/device/thing/status',
         ),
+        'cache_timeout': int(os.environ.get('IOTSERVER_SONOFF_CACHE_TIMEOUT', 60)),
     },
     'weather': {
         'url': os.environ.get(
