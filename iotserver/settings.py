@@ -90,7 +90,9 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': os.environ.get('IOTSERVER_MEMCACHED_LOCATION', 'localhost:11211'),
+        'LOCATION': os.environ.get(
+            'IOTSERVER_MEMCACHED_LOCATION', 'localhost:11211'
+        ),
         'TIMEOUT': (60 * 60),  # 1 hour
     }
 }
@@ -99,7 +101,7 @@ CACHES = {
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',  # noqa: E501
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
@@ -128,7 +130,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 CORS_ALLOWED_ORIGINS = os.environ.get(
     'IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'
 ).split(',')
-CORS_ALLOW_ALL_ORIGINS = os.environ.get('IOTSERVER_CORS_ALLOW_ALL_ORIGINS') == '1'
+CORS_ALLOW_ALL_ORIGINS = (
+    os.environ.get('IOTSERVER_CORS_ALLOW_ALL_ORIGINS') == '1'
+)
 
 # Geodjango GDAL library path
 GDAL_LIBRARY_PATH = os.environ.get('IOTSERVER_GDAL_LIBRARY_PATH', None)
@@ -193,14 +197,18 @@ INTEGRATIONS = {
             'IOTSERVER_SONOFF_DEVICE_URL',
             'https://eu-apia.coolkit.cc/v2/device/thing/status',
         ),
-        'cache_timeout': int(os.environ.get('IOTSERVER_SONOFF_CACHE_TIMEOUT', 60)),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_SONOFF_CACHE_TIMEOUT', 60 * 5)
+        ),
     },
     'weather': {
         'url': os.environ.get(
             'IOTSERVER_OPENWEATHER_URL',
             'https://api.openweathermap.org/data/3.0/onecall',
         ),
-        'api_key': os.environ.get('IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'),
+        'api_key': os.environ.get(
+            'IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'
+        ),
     },
     'solarman': {
         'base_url': os.environ.get(
@@ -217,7 +225,9 @@ INTEGRATIONS = {
 # GIS config
 MAP_WIDGETS = {
     'GoogleMap': {
-        'apiKey': os.environ.get('IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'),
+        'apiKey': os.environ.get(
+            'IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'
+        ),
         'PointField': {
             'interactive': {
                 'mapOptions': {'zoom': 15, 'center': [-26.190, 28.050]},
@@ -235,7 +245,9 @@ AUTO_SYNC_DEVICE = os.environ.get('IOTSERVER_AUTO_SYNC_DEVICE', '0') == '1'
 
 # Webrepl config
 WEBREPL_PORT = os.environ.get('IOTSERVER_WEBREPL_PORT', 8266)
-WEBREPL_PASSWORD = os.environ.get('IOTSERVER_WEBREPL_PASSWORD', 'webrepl-password')
+WEBREPL_PASSWORD = os.environ.get(
+    'IOTSERVER_WEBREPL_PASSWORD', 'webrepl-password'
+)
 
 # Default config generated for devices with unmanaged firmware
 DEVICE_HEALTH_URL = os.environ.get(

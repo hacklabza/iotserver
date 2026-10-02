@@ -132,7 +132,10 @@ def sonoff_toggle(**kwargs):
     """
     on = kwargs.get('on')
     device_id = kwargs.get('device_id')
-    state = Sonoff(device_id).toggle_device('on' if on else 'off')
+    cache_timeout = kwargs.get('cache_timeout', 60 * 5)
+    state = Sonoff(device_id).toggle_device(
+        state='on' if on else 'off', cache_timeout=cache_timeout
+    )
     return value_to_bool(state)
 
 
@@ -185,7 +188,10 @@ def _resolve_rule_params(rule, rule_values, mqtt_values):
             condition_values = handle_conditions(rule_values, value)
             must, should = condition_values['must'], condition_values['should']
             rule_params[key] = all(
-                [all(must if must else [True]), any(should if should else [True])]
+                [
+                    all(must if must else [True]),
+                    any(should if should else [True]),
+                ]
             )
         else:
             rule_params[key] = value
@@ -265,10 +271,14 @@ def run_device(device, stop_event: threading.Event) -> None:
 
                     # Get the resolved rule parameters for this pin.
                     rule = pin['rule']
-                    rule_params = _resolve_rule_params(rule, rule_values, mqtt_values)
+                    rule_params = _resolve_rule_params(
+                        rule, rule_values, mqtt_values
+                    )
 
                     value = RULE_ACTIONS[rule['action']](**rule_params)
-                    if rule['action'] == 'service' and rule['input'].get('fields'):
+                    if rule['action'] == 'service' and rule['input'].get(
+                        'fields'
+                    ):
                         # value is keyed by field path; namespace it under the
                         # pin's identifier to match how conditions reference it.
                         rule_values.update(

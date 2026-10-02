@@ -94,8 +94,10 @@ class Sonoff(object):
         access_token_expires_at: datetime,
         refresh_token_expires_at: datetime,
     ) -> None:
-        # Update the existing singleton row in place rather than assuming pk=1,
-        # since a deleted row's pk is not reused (e.g. on Postgres).
+        """
+        Update the existing singleton row in place rather than assuming pk=1,
+        since a deleted row's pk is not reused (e.g. on Postgres).
+        """
         token = SonoffToken.objects.first() or SonoffToken()
         token.access_token = access_token
         token.refresh_token = refresh_token
@@ -150,6 +152,10 @@ class Sonoff(object):
         )
 
     def _refresh(self, token: SonoffToken) -> str:
+        """
+        Refresh the access token using the provided refresh token. Returns the
+        new access token.
+        """
         request_data = {'rt': token.refresh_token}
         signed_token = self._sign_request(request_data)
 
@@ -186,7 +192,9 @@ class Sonoff(object):
 
         return self._refresh(token)
 
-    def toggle_device(self, state: str) -> str:
+    def toggle_device(
+        self, state: str, cache_timeout: int | None = None
+    ) -> str:
         """
         Toggle the device state, valid states are [on, off]. The state is
         cached to prevent redundant API calls.
@@ -211,5 +219,6 @@ class Sonoff(object):
         response.raise_for_status()
         self._unwrap(response)
 
-        cache.set(cache_key, state, timeout=self.config['cache_timeout'])
+        cache_timeout = cache_timeout or self.config['cache_timeout']
+        cache.set(cache_key, state, timeout=cache_timeout)
         return state
