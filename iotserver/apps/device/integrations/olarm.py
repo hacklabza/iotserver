@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 ALARM_EVENT_STATES = {'alarm', 'fire', 'emergency'}
 
@@ -14,16 +15,25 @@ class Olarm(object):
     def __init__(self) -> None:
         self.config = settings.INTEGRATIONS['olarm']
         self.device_id = self.config['device_id']
+        self.cache_prefix = f'{self.__module__}.{self.__class__.__name__}'
 
     @property
     def events(self) -> List[Dict]:
+        cache_key = f'{self.cache_prefix}.events:{self.device_id}'
+        cached_events = cache.get(cache_key)
+        if cached_events is not None:
+            return cached_events
+
         response = requests.get(
             url=f"{self.config['base_url']}/api/v4/devices/{self.device_id}/events",
             headers={'Authorization': f"Bearer {self.config['api_key']}"},
             timeout=10,
         )
         response.raise_for_status()
-        return response.json().get('data', [])
+        events = response.json().get('data', [])
+
+        cache.set(cache_key, events, timeout=self.config['cache_timeout'])
+        return events
 
     @property
     def latest_event(self) -> Optional[Dict]:

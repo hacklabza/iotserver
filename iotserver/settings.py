@@ -227,6 +227,9 @@ INTEGRATIONS = {
         ),
         'api_key': os.environ.get('IOTSERVER_OLARM_API_KEY', None),
         'device_id': os.environ.get('IOTSERVER_OLARM_DEVICE_ID', None),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_OLARM_CACHE_TIMEOUT', 60)
+        ),
     },
 }
 

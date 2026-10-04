@@ -11,8 +11,17 @@ def mock_settings(mocker):
             'base_url': 'https://example.com',
             'api_key': 'api-key',
             'device_id': 'device-id',
+            'cache_timeout': 60,
         }
     }
+    return mock
+
+
+@pytest.fixture(autouse=True)
+def mock_cache(mocker):
+    """Mock Django cache to return None (cache miss)"""
+    mock = mocker.patch('iotserver.apps.device.integrations.olarm.cache')
+    mock.get.return_value = None
     return mock
 
 
@@ -51,6 +60,37 @@ class TestOlarmIntegration(object):
             timeout=10,
         )
         mock_requests.get.return_value.raise_for_status.assert_called_once_with()
+
+    def test_events_are_cached(self, olarm, mock_requests, mock_cache):
+        events = [area_event(1, 'arm')]
+        set_events(mock_requests, events)
+
+        assert olarm.events == events
+
+        cache_key = (
+            'iotserver.apps.device.integrations.olarm.Olarm.events:device-id'
+        )
+        mock_cache.get.assert_called_once_with(cache_key)
+        mock_cache.set.assert_called_once_with(cache_key, events, timeout=60)
+
+    def test_events_cache_hit(self, olarm, mock_requests, mock_cache):
+        events = [area_event(1, 'alarm')]
+        mock_cache.get.return_value = events
+
+        assert olarm.events == events
+        mock_requests.get.assert_not_called()
+        mock_cache.set.assert_not_called()
+
+    def test_events_http_error_is_not_cached(
+        self, olarm, mock_requests, mock_cache
+    ):
+        mock_requests.get.return_value.raise_for_status.side_effect = (
+            RuntimeError
+        )
+
+        with pytest.raises(RuntimeError):
+            _ = olarm.events
+        mock_cache.set.assert_not_called()
 
     def test_events_missing_data_returns_empty_list(self, olarm, mock_requests):
         mock_requests.get.return_value.json.return_value = {}
