@@ -56,7 +56,10 @@ class TestPrettyJSONWidget(object):
         }
 
     def test_format_value_masks_nested_secret_keys(self):
-        value = {'wifi': {'ssid': 'home', 'password': 'hunter2'}, 'name': 'device'}
+        value = {
+            'wifi': {'ssid': 'home', 'password': 'hunter2'},
+            'name': 'device',
+        }
 
         result = json.loads(self.widget.format_value(value))
 
@@ -67,13 +70,19 @@ class TestPrettyJSONWidget(object):
 
     def test_format_value_masks_secret_keys_in_list_of_dicts(self):
         value = {
-            'endpoints': [{'auth_header': 'Bearer xyz'}, {'auth_header': 'Bearer abc'}]
+            'endpoints': [
+                {'auth_header': 'Bearer xyz'},
+                {'auth_header': 'Bearer abc'},
+            ]
         }
 
         result = json.loads(self.widget.format_value(value))
 
         assert result == {
-            'endpoints': [{'auth_header': MASK_VALUE}, {'auth_header': MASK_VALUE}]
+            'endpoints': [
+                {'auth_header': MASK_VALUE},
+                {'auth_header': MASK_VALUE},
+            ]
         }
 
     def test_format_value_does_not_mask_empty_secret_value(self):
@@ -133,7 +142,9 @@ class TestPrettyJSONWidget(object):
     def test_value_from_datadict_restores_nested_untouched_masked_value(self):
         original = {'wifi': {'ssid': 'home', 'password': 'hunter2'}}
         data = {
-            'config': json.dumps({'wifi': {'ssid': 'home', 'password': MASK_VALUE}}),
+            'config': json.dumps(
+                {'wifi': {'ssid': 'home', 'password': MASK_VALUE}}
+            ),
             'config__pretty_json_original': json.dumps(original),
         }
 
@@ -141,14 +152,18 @@ class TestPrettyJSONWidget(object):
 
         assert result == original
 
-    def test_value_from_datadict_without_original_returns_submitted_unchanged(self):
+    def test_value_from_datadict_without_original_returns_submitted_unchanged(
+        self,
+    ):
         data = {'config': json.dumps({'password': MASK_VALUE})}
 
         result = self.widget.value_from_datadict(data, {}, 'config')
 
         assert result == data['config']
 
-    def test_value_from_datadict_non_structured_submission_returned_unchanged(self):
+    def test_value_from_datadict_non_structured_submission_returned_unchanged(
+        self,
+    ):
         data = {
             'config': 'not json',
             'config__pretty_json_original': json.dumps({'password': 'hunter2'}),

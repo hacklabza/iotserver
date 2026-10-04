@@ -7,7 +7,9 @@ from iotserver.apps.device.tests import factories as device_factories
 @pytest.mark.django_db
 class TestReconcileWorkers:
     def test_starts_worker_for_new_active_device(self, mocker):
-        device = device_factories.DeviceFactory(managed_firmware=False, active=True)
+        device = device_factories.DeviceFactory(
+            managed_firmware=False, active=True
+        )
         mock_thread_cls = mocker.patch('threading.Thread')
         command = Command()
         workers = {}
@@ -49,7 +51,9 @@ class TestReconcileWorkers:
         mock_thread_cls.assert_not_called()
 
     def test_stops_worker_for_device_no_longer_matching(self, mocker):
-        device = device_factories.DeviceFactory(managed_firmware=False, active=True)
+        device = device_factories.DeviceFactory(
+            managed_firmware=False, active=True
+        )
         mocker.patch('threading.Thread')
         command = Command()
         workers = {}

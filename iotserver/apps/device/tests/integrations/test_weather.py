@@ -98,10 +98,13 @@ class TestWeatherIntegration(object):
         mock_requests.get.assert_called_once_with(weather._build_url())
         mock_requests.response.raise_for_status.assert_called_once_with()
         mock_cache.set.assert_called_once_with(
-            f'{weather.cache_prefix}._get_weather_data:{weather.location}', weather_data
+            f'{weather.cache_prefix}._get_weather_data:{weather.location}',
+            weather_data,
         )
 
-    def test_empty_weather_data_is_not_cached(self, weather, mock_cache, mock_requests):
+    def test_empty_weather_data_is_not_cached(
+        self, weather, mock_cache, mock_requests
+    ):
         assert weather._get_weather_data() is None
         mock_cache.set.assert_not_called()
 
@@ -126,7 +129,9 @@ class TestWeatherIntegration(object):
         assert data['humidity'] == 50
         assert data['temperature'] == 25.12
 
-    def test_current_weather_detects_rain(self, weather, weather_data, mock_requests):
+    def test_current_weather_detects_rain(
+        self, weather, weather_data, mock_requests
+    ):
         weather_data['current']['weather'][0]['main'] = 'Rain'
         mock_requests.response.json.return_value = weather_data
 
@@ -184,5 +189,7 @@ class TestWeatherIntegration(object):
 
         assert weather.forecast is None
 
-    def test_forecast_returns_none_for_empty_response(self, weather, mock_requests):
+    def test_forecast_returns_none_for_empty_response(
+        self, weather, mock_requests
+    ):
         assert weather.forecast is None

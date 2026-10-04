@@ -49,7 +49,10 @@ class TestEvaluateCondition:
             'conditions': {
                 'must': {
                     'timer': {'operator': 'eq', 'value': True},
-                    'weather-service-current.rain': {'operator': 'eq', 'value': False},
+                    'weather-service-current.rain': {
+                        'operator': 'eq',
+                        'value': False,
+                    },
                 },
                 'should': {
                     'mqtt-toggle': {'operator': 'eq', 'value': True},
@@ -119,7 +122,9 @@ class TestTimer:
 
 class TestService:
     def test_returns_json_with_auth_header(self, mocker):
-        mock_requests = mocker.patch('iotserver.apps.device.utils.rules.requests')
+        mock_requests = mocker.patch(
+            'iotserver.apps.device.utils.rules.requests'
+        )
         mock_requests.get.return_value.json.return_value = {'temperature': 20}
 
         result = rules.service(url='http://example.com', auth_header='abc123')
@@ -131,14 +136,20 @@ class TestService:
         assert result == {'temperature': 20}
 
     def test_omits_headers_without_auth_header(self, mocker):
-        mock_requests = mocker.patch('iotserver.apps.device.utils.rules.requests')
+        mock_requests = mocker.patch(
+            'iotserver.apps.device.utils.rules.requests'
+        )
 
         rules.service(url='http://example.com')
 
-        mock_requests.get.assert_called_once_with('http://example.com', headers=None)
+        mock_requests.get.assert_called_once_with(
+            'http://example.com', headers=None
+        )
 
     def test_extracts_only_configured_fields(self, mocker):
-        mock_requests = mocker.patch('iotserver.apps.device.utils.rules.requests')
+        mock_requests = mocker.patch(
+            'iotserver.apps.device.utils.rules.requests'
+        )
         mock_requests.get.return_value.json.return_value = {
             'last_status': {'status': {'light-sensor': 19.8, 'other': 'x'}}
         }
@@ -151,7 +162,9 @@ class TestService:
         assert result == {'last_status.status.light-sensor': 19.8}
 
     def test_extracts_none_for_missing_field(self, mocker):
-        mock_requests = mocker.patch('iotserver.apps.device.utils.rules.requests')
+        mock_requests = mocker.patch(
+            'iotserver.apps.device.utils.rules.requests'
+        )
         mock_requests.get.return_value.json.return_value = {
             'last_status': {'status': {}}
         }
@@ -174,23 +187,83 @@ class TestMqttToggle:
 
 class TestSonoffToggle:
     def test_toggles_on(self, mocker):
-        mock_sonoff_cls = mocker.patch('iotserver.apps.device.utils.rules.Sonoff')
+        mock_sonoff_cls = mocker.patch(
+            'iotserver.apps.device.utils.rules.Sonoff'
+        )
         mock_sonoff_cls.return_value.toggle_device.return_value = 'on'
 
         result = rules.sonoff_toggle(on=True, device_id='abc123')
 
-        mock_sonoff_cls.assert_called_once_with('abc123')
-        mock_sonoff_cls.return_value.toggle_device.assert_called_once_with('on')
+        mock_sonoff_cls.assert_called_once_with('abc123', cache_timeout=None)
+        mock_sonoff_cls.return_value.toggle_device.assert_called_once_with(
+            state='on'
+        )
         assert result is True
 
     def test_toggles_off(self, mocker):
-        mock_sonoff_cls = mocker.patch('iotserver.apps.device.utils.rules.Sonoff')
+        mock_sonoff_cls = mocker.patch(
+            'iotserver.apps.device.utils.rules.Sonoff'
+        )
         mock_sonoff_cls.return_value.toggle_device.return_value = 'off'
 
         result = rules.sonoff_toggle(on=False, device_id='abc123')
 
-        mock_sonoff_cls.return_value.toggle_device.assert_called_once_with('off')
+        mock_sonoff_cls.return_value.toggle_device.assert_called_once_with(
+            state='off'
+        )
         assert result is False
+
+    def test_custom_cache_timeout(self, mocker):
+        mock_sonoff_cls = mocker.patch(
+            'iotserver.apps.device.utils.rules.Sonoff'
+        )
+        mock_sonoff_cls.return_value.toggle_device.return_value = 'on'
+
+        rules.sonoff_toggle(on=True, device_id='abc123', cache_timeout=30)
+
+        mock_sonoff_cls.assert_called_once_with('abc123', cache_timeout=30)
+
+
+class TestOlarmActivated:
+    @pytest.mark.parametrize('activated', [True, False])
+    def test_returns_activated(self, mocker, activated):
+        mock_olarm_cls = mocker.patch('iotserver.apps.device.utils.rules.Olarm')
+        mock_olarm_cls.return_value.activated = activated
+
+        assert rules.olarm_activated() is activated
+        mock_olarm_cls.assert_called_once_with(cache_timeout=None)
+
+    def test_custom_cache_timeout(self, mocker):
+        mock_olarm_cls = mocker.patch('iotserver.apps.device.utils.rules.Olarm')
+
+        rules.olarm_activated(cache_timeout=30)
+
+        mock_olarm_cls.assert_called_once_with(cache_timeout=30)
+
+
+class TestSolarmanStatus:
+    def test_returns_real_time(self, mocker):
+        real_time = {
+            'solar_input': 1200.0,
+            'battery_soc': 71.0,
+            'current_consumption': 932.0,
+        }
+        mock_solarman_cls = mocker.patch(
+            'iotserver.apps.device.utils.rules.Solarman'
+        )
+        mock_solarman_cls.return_value.real_time = real_time
+
+        assert rules.solarman_status(station_id=3208097) == real_time
+        mock_solarman_cls.assert_called_once_with(3208097, cache_timeout=None)
+
+    def test_custom_cache_timeout(self, mocker):
+        mock_solarman_cls = mocker.patch(
+            'iotserver.apps.device.utils.rules.Solarman'
+        )
+
+        rules.solarman_status(station_id=3208097, cache_timeout=30)
+
+        mock_solarman_cls.assert_called_once_with(3208097, cache_timeout=30)
 
 
 def test_rule_actions_dispatch_table():
@@ -199,6 +272,8 @@ def test_rule_actions_dispatch_table():
         'service': rules.service,
         'mqtt_toggle': rules.mqtt_toggle,
         'sonoff_toggle': rules.sonoff_toggle,
+        'olarm_activated': rules.olarm_activated,
+        'solarman_status': rules.solarman_status,
     }
 
 
@@ -227,7 +302,12 @@ class TestBuildMqttClient:
 
     def test_sets_credentials_when_configured(self, mock_client_cls):
         client = rules._build_mqtt_client(
-            {'client_id': 'd', 'host': 'h', 'username': 'user', 'password': 'pass'},
+            {
+                'client_id': 'd',
+                'host': 'h',
+                'username': 'user',
+                'password': 'pass',
+            },
             None,
             None,
         )
@@ -235,7 +315,9 @@ class TestBuildMqttClient:
         client.username_pw_set.assert_called_once_with('user', 'pass')
 
     def test_skips_credentials_when_not_configured(self, mock_client_cls):
-        client = rules._build_mqtt_client({'client_id': 'd', 'host': 'h'}, None, None)
+        client = rules._build_mqtt_client(
+            {'client_id': 'd', 'host': 'h'}, None, None
+        )
 
         client.username_pw_set.assert_not_called()
 
@@ -251,7 +333,10 @@ class TestBuildMqttClient:
             {
                 'client_id': 'd',
                 'host': 'h',
-                'lastwill': {'topic': 'iot-devices/d/logs', 'message': 'disconnected'},
+                'lastwill': {
+                    'topic': 'iot-devices/d/logs',
+                    'message': 'disconnected',
+                },
             },
             None,
             None,
@@ -299,7 +384,9 @@ class TestResolveRuleParams:
                 'device_id': 'abc123',
                 'on': {
                     'conditions': {
-                        'should': {'mqtt-toggle': {'operator': 'eq', 'value': True}}
+                        'should': {
+                            'mqtt-toggle': {'operator': 'eq', 'value': True}
+                        }
                     }
                 },
             },
@@ -310,12 +397,18 @@ class TestResolveRuleParams:
         assert result == {'device_id': 'abc123', 'on': False}
 
     def test_injects_mqtt_values_for_mqtt_toggle_action(self):
-        rule = {'action': 'mqtt_toggle', 'input': {'topic': 'iot-devices/x/toggle'}}
+        rule = {
+            'action': 'mqtt_toggle',
+            'input': {'topic': 'iot-devices/x/toggle'},
+        }
         mqtt_values = {'iot-devices/x/toggle': '1'}
 
         result = rules._resolve_rule_params(rule, {}, mqtt_values)
 
-        assert result == {'topic': 'iot-devices/x/toggle', 'mqtt_values': mqtt_values}
+        assert result == {
+            'topic': 'iot-devices/x/toggle',
+            'mqtt_values': mqtt_values,
+        }
 
 
 class TestPublishStatus:
@@ -325,7 +418,9 @@ class TestPublishStatus:
         status_hash = rules._publish_status(client, 'device-1', {'a': 1}, None)
 
         payload = json.dumps({'a': 1}, sort_keys=True)
-        client.publish.assert_called_once_with('iot-devices/device-1/status', payload)
+        client.publish.assert_called_once_with(
+            'iot-devices/device-1/status', payload
+        )
         assert status_hash == hashlib.sha1(payload.encode()).digest()
 
     def test_skips_publish_when_status_unchanged(self, mocker):
@@ -333,7 +428,9 @@ class TestPublishStatus:
         payload = json.dumps({'a': 1}, sort_keys=True)
         previous_hash = hashlib.sha1(payload.encode()).digest()
 
-        result_hash = rules._publish_status(client, 'device-1', {'a': 1}, previous_hash)
+        result_hash = rules._publish_status(
+            client, 'device-1', {'a': 1}, previous_hash
+        )
 
         client.publish.assert_not_called()
         assert result_hash == previous_hash
@@ -344,16 +441,22 @@ class TestPublishLog:
         mock_logger = mocker.patch('iotserver.apps.device.utils.rules.logger')
         client = mocker.Mock()
 
-        rules._publish_log(client, 'device-1', {'level': 'warning'}, 'error', 'boom')
+        rules._publish_log(
+            client, 'device-1', {'level': 'warning'}, 'error', 'boom'
+        )
 
         mock_logger.error.assert_called_once_with('boom')
-        client.publish.assert_called_once_with('iot-devices/device-1/logs', 'boom')
+        client.publish.assert_called_once_with(
+            'iot-devices/device-1/logs', 'boom'
+        )
 
     def test_suppresses_publish_below_threshold(self, mocker):
         mock_logger = mocker.patch('iotserver.apps.device.utils.rules.logger')
         client = mocker.Mock()
 
-        rules._publish_log(client, 'device-1', {'level': 'warning'}, 'debug', 'noisy')
+        rules._publish_log(
+            client, 'device-1', {'level': 'warning'}, 'debug', 'noisy'
+        )
 
         mock_logger.debug.assert_called_once_with('noisy')
         client.publish.assert_not_called()
@@ -371,7 +474,9 @@ class TestRunDevice:
         config.update(config_overrides)
         return mocker.Mock(id='device-1', full_config=config)
 
-    def test_runs_health_check_dispatches_rule_and_publishes_status(self, mocker):
+    def test_runs_health_check_dispatches_rule_and_publishes_status(
+        self, mocker
+    ):
         stop_event = threading.Event()
         mock_client = mocker.Mock()
         mocker.patch(
@@ -383,7 +488,8 @@ class TestRunDevice:
         )
         mock_action = mocker.Mock(return_value=True)
         mocker.patch.dict(
-            'iotserver.apps.device.utils.rules.RULE_ACTIONS', {'timer': mock_action}
+            'iotserver.apps.device.utils.rules.RULE_ACTIONS',
+            {'timer': mock_action},
         )
         mock_publish_status = mocker.patch(
             'iotserver.apps.device.utils.rules._publish_status',
@@ -409,7 +515,9 @@ class TestRunDevice:
         mock_requests_get.assert_called_once_with(
             'http://example.com/health/', timeout=10
         )
-        mock_action.assert_called_once_with(start_time='18:00', end_time='05:00')
+        mock_action.assert_called_once_with(
+            start_time='18:00', end_time='05:00'
+        )
         mock_publish_status.assert_called_once()
         mock_client.loop_stop.assert_called_once()
         mock_client.disconnect.assert_called_once()
@@ -473,7 +581,9 @@ class TestRunDevice:
         _, on_connect, _on_message = mock_build_client.call_args[0]
         on_connect(mock_client, None, None, None, None)
 
-        mock_client.subscribe.assert_called_once_with('iot-devices/device-1/toggle')
+        mock_client.subscribe.assert_called_once_with(
+            'iot-devices/device-1/toggle'
+        )
 
     def test_service_rule_only_stores_configured_fields(self, mocker):
         stop_event = threading.Event()
@@ -523,7 +633,7 @@ class TestRunDevice:
                             'on': {
                                 'conditions': {
                                     'must': {
-                                        'light-sensor-service.last_status.status.light-sensor': {
+                                        'light-sensor-service.last_status.status.light-sensor': {  # noqa: E501
                                             'operator': 'lt',
                                             'value': 20,
                                         }
@@ -542,4 +652,46 @@ class TestRunDevice:
         assert rule_values == {
             'light-sensor-service.last_status.status.light-sensor': 19.8,
             'sonoff-switch': False,
+        }
+
+    def test_solarman_status_fields_are_namespaced(self, mocker):
+        stop_event = threading.Event()
+        mocker.patch(
+            'iotserver.apps.device.utils.rules._build_mqtt_client',
+            return_value=mocker.Mock(),
+        )
+        mocker.patch('iotserver.apps.device.utils.rules.requests.get')
+        mock_publish_status = mocker.patch(
+            'iotserver.apps.device.utils.rules._publish_status',
+            side_effect=lambda *a, **k: stop_event.set(),
+        )
+        mocker.patch.dict(
+            'iotserver.apps.device.utils.rules.RULE_ACTIONS',
+            {
+                'solarman_status': mocker.Mock(
+                    return_value={'battery_soc': 71.0, 'solar_input': 1200.0}
+                ),
+            },
+        )
+
+        device = self._device(
+            mocker,
+            pins=[
+                {
+                    'identifier': 'solar',
+                    'interval': 1,
+                    'rule': {
+                        'action': 'solarman_status',
+                        'input': {'station_id': 3208097},
+                    },
+                }
+            ],
+        )
+
+        rules.run_device(device, stop_event)
+
+        rule_values = mock_publish_status.call_args[0][2]
+        assert rule_values == {
+            'solar.battery_soc': 71.0,
+            'solar.solar_input': 1200.0,
         }

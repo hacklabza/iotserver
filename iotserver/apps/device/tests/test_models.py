@@ -41,7 +41,9 @@ class TestDeviceTypeModel(object):
 class TestDeviceModel(object):
     def setup_method(self, test_method):
         self.device = device_factories.DeviceFactory()
-        self.device_pin = device_factories.DevicePinFactory(devices=[self.device])
+        self.device_pin = device_factories.DevicePinFactory(
+            devices=[self.device]
+        )
         self.device_statuses = [
             device_factories.DeviceStatusFactory(
                 device=self.device,
@@ -93,7 +95,9 @@ class TestDeviceModel(object):
         }
 
     def test_mqtt_toggle(self, mocker):
-        mock_mqtt_toggle = mocker.patch('iotserver.apps.device.models.mqtt.toggle')
+        mock_mqtt_toggle = mocker.patch(
+            'iotserver.apps.device.models.mqtt.toggle'
+        )
         mock_mqtt_toggle.return_value = None
         self.device.mqtt_toggle('on')
         mock_mqtt_toggle.assert_called_once_with(self.device.id, '1')
@@ -115,15 +119,22 @@ class TestDeviceModel(object):
                 input_file.write(json.dumps({'main': {}, 'pins': []}))
 
         mocker.patch(
-            'iotserver.apps.device.models.webrepl.get_file', side_effect=fake_get_file
+            'iotserver.apps.device.models.webrepl.get_file',
+            side_effect=fake_get_file,
         )
 
-        models.handle_device_default_config(sender=models.Device, instance=self.device)
+        models.handle_device_default_config(
+            sender=models.Device, instance=self.device
+        )
 
         mock_get_websocket.assert_called_once_with(
-            self.device.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+            self.device.ip_address,
+            settings.WEBREPL_PORT,
+            settings.WEBREPL_PASSWORD,
         )
-        assert self.device.config == {'main': {'identifier': str(self.device.id)}}
+        assert self.device.config == {
+            'main': {'identifier': str(self.device.id)}
+        }
 
     def test_handle_device_default_config_unreachable(self, settings, mocker):
         settings.AUTO_SYNC_DEVICE = True
@@ -146,7 +157,9 @@ class TestDeviceModel(object):
         self.device.managed_firmware = False
         self.device.config = None
 
-        models.handle_device_default_config(sender=models.Device, instance=self.device)
+        models.handle_device_default_config(
+            sender=models.Device, instance=self.device
+        )
 
         expected_config = json.loads(
             json.dumps(settings.DEVICE_DEFAULT_CONFIG).replace(
@@ -165,12 +178,18 @@ class TestDeviceModel(object):
             'iotserver.apps.device.models.webrepl.get_websocket',
             return_value=(mocker.Mock(), mock_web_socket),
         )
-        mock_put_file = mocker.patch('iotserver.apps.device.models.webrepl.put_file')
+        mock_put_file = mocker.patch(
+            'iotserver.apps.device.models.webrepl.put_file'
+        )
 
-        models.handle_device_config_update(sender=models.Device, instance=self.device)
+        models.handle_device_config_update(
+            sender=models.Device, instance=self.device
+        )
 
         mock_get_websocket.assert_called_once_with(
-            self.device.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+            self.device.ip_address,
+            settings.WEBREPL_PORT,
+            settings.WEBREPL_PASSWORD,
         )
         mock_put_file.assert_called_once_with(
             mock_web_socket,

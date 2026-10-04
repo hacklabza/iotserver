@@ -7,7 +7,10 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from iotserver.apps.device.integrations.sonoff import Sonoff, SonoffNotAuthorizedError
+from iotserver.apps.device.integrations.sonoff import (
+    Sonoff,
+    SonoffNotAuthorizedError,
+)
 from iotserver.apps.device.models import SonoffToken
 
 
@@ -130,7 +133,9 @@ class TestSonoffIntegration(object):
         assert token.refresh_token == 'refresh-token'
         assert token.region == 'eu'
 
-    def test_exchange_code_error_response_is_raised(self, sonoff, mock_requests):
+    def test_exchange_code_error_response_is_raised(
+        self, sonoff, mock_requests
+    ):
         mock_requests.response.json.return_value = {
             'error': 10001,
             'msg': 'invalid code',
@@ -146,7 +151,9 @@ class TestSonoffIntegration(object):
             sonoff.toggle_device('on')
 
     @pytest.mark.parametrize('state', ['on', 'off'])
-    def test_toggle_device(self, sonoff, mock_requests, mocker, state, mock_cache):
+    def test_toggle_device(
+        self, sonoff, mock_requests, mocker, state, mock_cache
+    ):
         SonoffToken.objects.create(
             access_token='access-token',
             refresh_token='refresh-token',
@@ -206,10 +213,13 @@ class TestSonoffIntegration(object):
 
         device_call = mock_requests.post.call_args_list[1]
         assert (
-            device_call.kwargs['headers']['Authorization'] == 'Bearer new-access-token'
+            device_call.kwargs['headers']['Authorization']
+            == 'Bearer new-access-token'
         )
 
-    def test_toggle_http_error_is_propagated(self, sonoff, mock_requests, mock_cache):
+    def test_toggle_http_error_is_propagated(
+        self, sonoff, mock_requests, mock_cache
+    ):
         SonoffToken.objects.create(
             access_token='access-token',
             refresh_token='refresh-token',
@@ -225,7 +235,9 @@ class TestSonoffIntegration(object):
         with pytest.raises(RuntimeError, match='toggle failed'):
             sonoff.toggle_device('on')
 
-    def test_toggle_error_response_is_raised(self, sonoff, mock_requests, mock_cache):
+    def test_toggle_error_response_is_raised(
+        self, sonoff, mock_requests, mock_cache
+    ):
         SonoffToken.objects.create(
             access_token='access-token',
             refresh_token='refresh-token',

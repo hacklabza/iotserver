@@ -3,6 +3,7 @@ from typing import Dict
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 
 class Solarman(object):
@@ -13,12 +14,16 @@ class Solarman(object):
         station_id (int): The Solarman station_id
     """
 
-    def __init__(self, station_id: int) -> None:
+    def __init__(self, station_id: int, cache_timeout: int = None) -> None:
         self.config = settings.INTEGRATIONS['solarman']
         self.station_id = station_id
+        self.cache_prefix = f'{self.__module__}.{self.__class__.__name__}'
+        self.cache_timeout = cache_timeout or self.config['cache_timeout']
 
     def _hash_password(self) -> str:
-        return hashlib.sha256(self.config['password'].encode('utf-8')).hexdigest()
+        return hashlib.sha256(
+            self.config['password'].encode('utf-8')
+        ).hexdigest()
 
     def _authenticate(self) -> str:
         """
@@ -47,6 +52,11 @@ class Solarman(object):
         Return the solar input, battery state of charge and current consumption
         for the station.
         """
+        cache_key = f'{self.cache_prefix}.real_time:{self.station_id}'
+        cached_real_time = cache.get(cache_key)
+        if cached_real_time is not None:
+            return cached_real_time
+
         access_token = self._authenticate()
 
         response = requests.post(
@@ -57,8 +67,10 @@ class Solarman(object):
         response.raise_for_status()
         real_time_data = response.json()
 
-        return {
+        real_time = {
             'solar_input': real_time_data['generationPower'],
             'battery_soc': real_time_data['batterySoc'],
             'current_consumption': real_time_data['usePower'],
         }
+        cache.set(cache_key, real_time, timeout=self.cache_timeout)
+        return real_time

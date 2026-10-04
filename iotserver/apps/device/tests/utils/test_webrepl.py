@@ -7,7 +7,10 @@ from iotserver.apps.device.utils import webrepl
     ('remote', 'expected'),
     [
         ('device.local:config.json', ('device.local', 8266, 'config.json')),
-        ('device.local:9000:config.json', ('device.local', 9000, 'config.json')),
+        (
+            'device.local:9000:config.json',
+            ('device.local', 9000, 'config.json'),
+        ),
         ('device.local:', ('device.local', 8266, '/')),
     ],
 )

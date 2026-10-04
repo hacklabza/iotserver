@@ -219,6 +219,9 @@ INTEGRATIONS = {
         'password': os.environ.get('IOTSERVER_SOLARMAN_PASSWORD', None),
         'app_id': os.environ.get('IOTSERVER_SOLARMAN_APP_ID', None),
         'app_secret': os.environ.get('IOTSERVER_SOLARMAN_APP_SECRET', None),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_SOLARMAN_CACHE_TIMEOUT', 60 * 5)
+        ),
     },
     'olarm': {
         'base_url': os.environ.get(

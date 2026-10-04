@@ -19,11 +19,15 @@ class TestDeviceModelAdmin(object):
         self.admin = DeviceModelAdmin(Device, None)
 
     def test_save_model_success(self, mocker):
-        mock_save_model = mocker.patch('django.contrib.admin.ModelAdmin.save_model')
+        mock_save_model = mocker.patch(
+            'django.contrib.admin.ModelAdmin.save_model'
+        )
 
         self.admin.save_model(self.request, self.device, form=None, change=True)
 
-        mock_save_model.assert_called_once_with(self.request, self.device, None, True)
+        mock_save_model.assert_called_once_with(
+            self.request, self.device, None, True
+        )
         assert list(messages.get_messages(self.request)) == []
 
     def test_save_model_device_unreachable(self, mocker):

@@ -8,7 +8,9 @@ from iotserver.apps.device.integrations.sonoff import Sonoff
 class TestSonoffAuthorizeCommand(object):
     def test_prints_authorize_url_without_code(self, mocker, capsys):
         mocker.patch.object(
-            Sonoff, 'authorize_url', return_value='https://example.com/authorize'
+            Sonoff,
+            'authorize_url',
+            return_value='https://example.com/authorize',
         )
 
         call_command('sonoff_authorize')

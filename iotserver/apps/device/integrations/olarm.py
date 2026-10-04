@@ -12,10 +12,11 @@ class Olarm(object):
     Olarm device and whether the alarm is currently activated (triggered).
     """
 
-    def __init__(self) -> None:
+    def __init__(self, cache_timeout: int = None) -> None:
         self.config = settings.INTEGRATIONS['olarm']
         self.device_id = self.config['device_id']
         self.cache_prefix = f'{self.__module__}.{self.__class__.__name__}'
+        self.cache_timeout = cache_timeout or self.config['cache_timeout']
 
     @property
     def events(self) -> List[Dict]:
@@ -32,7 +33,7 @@ class Olarm(object):
         response.raise_for_status()
         events = response.json().get('data', [])
 
-        cache.set(cache_key, events, timeout=self.config['cache_timeout'])
+        cache.set(cache_key, events, timeout=self.cache_timeout)
         return events
 
     @property

@@ -37,9 +37,12 @@ class Sonoff(object):
             authorize/exchange_code steps of the OAuth flow.
     """
 
-    def __init__(self, device_id: str = None) -> None:
+    def __init__(
+        self, device_id: str = None, cache_timeout: int = None
+    ) -> None:
         self.config = settings.INTEGRATIONS['sonoff']
         self.device_id = device_id
+        self.cache_timeout = cache_timeout or self.config['cache_timeout']
         self.cache_prefix = f'{self.__module__}.{self.__class__.__name__}'
 
     def _sign(self, message: str) -> str:
@@ -192,9 +195,7 @@ class Sonoff(object):
 
         return self._refresh(token)
 
-    def toggle_device(
-        self, state: str, cache_timeout: int | None = None
-    ) -> str:
+    def toggle_device(self, state: str) -> str:
         """
         Toggle the device state, valid states are [on, off]. The state is
         cached to prevent redundant API calls.
@@ -219,6 +220,6 @@ class Sonoff(object):
         response.raise_for_status()
         self._unwrap(response)
 
-        cache_timeout = cache_timeout or self.config['cache_timeout']
+        cache_timeout = self.cache_timeout
         cache.set(cache_key, state, timeout=cache_timeout)
         return state

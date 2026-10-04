@@ -7,6 +7,8 @@ import paho.mqtt.client as mqtt
 import requests
 from django.utils import timezone
 
+from iotserver.apps.device.integrations.olarm import Olarm
+from iotserver.apps.device.integrations.solarman import Solarman
 from iotserver.apps.device.integrations.sonoff import Sonoff
 
 logger = logging.getLogger(__name__)
@@ -123,6 +125,7 @@ def mqtt_toggle(**kwargs):
     """
     topic = kwargs.get('topic')
     mqtt_values = kwargs.get('mqtt_values', {})
+
     return value_to_bool(mqtt_values.get(topic))
 
 
@@ -132,11 +135,36 @@ def sonoff_toggle(**kwargs):
     """
     on = kwargs.get('on')
     device_id = kwargs.get('device_id')
-    cache_timeout = kwargs.get('cache_timeout', 60 * 5)
-    state = Sonoff(device_id).toggle_device(
-        state='on' if on else 'off', cache_timeout=cache_timeout
-    )
+    cache_timeout = kwargs.get('cache_timeout')
+
+    sonoff = Sonoff(device_id, cache_timeout=cache_timeout)
+    state = sonoff.toggle_device(state='on' if on else 'off')
+
     return value_to_bool(state)
+
+
+def olarm_activated(**kwargs):
+    """
+    Returns whether the configured Olarm alarm is currently activated (triggered).
+    """
+    cache_timeout = kwargs.get('cache_timeout')
+
+    olarm = Olarm(cache_timeout=cache_timeout)
+
+    return olarm.activated
+
+
+def solarman_status(**kwargs):
+    """
+    Returns the real time solar input, battery SoC and consumption for a
+    Solarman station.
+    """
+    station_id = kwargs.get('station_id')
+    cache_timeout = kwargs.get('cache_timeout')
+
+    solarman = Solarman(station_id, cache_timeout=cache_timeout)
+
+    return solarman.real_time
 
 
 # Explicit whitelist of callable rule actions, rather than `getattr` on this
@@ -146,6 +174,8 @@ RULE_ACTIONS = {
     'service': service,
     'mqtt_toggle': mqtt_toggle,
     'sonoff_toggle': sonoff_toggle,
+    'olarm_activated': olarm_activated,
+    'solarman_status': solarman_status,
 }
 
 
@@ -276,8 +306,9 @@ def run_device(device, stop_event: threading.Event) -> None:
                     )
 
                     value = RULE_ACTIONS[rule['action']](**rule_params)
-                    if rule['action'] == 'service' and rule['input'].get(
-                        'fields'
+                    if rule['action'] == 'solarman_status' or (
+                        rule['action'] == 'service'
+                        and rule['input'].get('fields')
                     ):
                         # value is keyed by field path; namespace it under the
                         # pin's identifier to match how conditions reference it.

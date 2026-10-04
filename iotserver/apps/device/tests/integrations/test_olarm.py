@@ -73,6 +73,11 @@ class TestOlarmIntegration(object):
         mock_cache.get.assert_called_once_with(cache_key)
         mock_cache.set.assert_called_once_with(cache_key, events, timeout=60)
 
+    def test_events_custom_cache_timeout(self, mock_requests, mock_cache):
+        _ = Olarm(cache_timeout=30).events
+
+        assert mock_cache.set.call_args.kwargs['timeout'] == 30
+
     def test_events_cache_hit(self, olarm, mock_requests, mock_cache):
         events = [area_event(1, 'alarm')]
         mock_cache.get.return_value = events
