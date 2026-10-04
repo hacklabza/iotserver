@@ -220,6 +220,14 @@ INTEGRATIONS = {
         'app_id': os.environ.get('IOTSERVER_SOLARMAN_APP_ID', None),
         'app_secret': os.environ.get('IOTSERVER_SOLARMAN_APP_SECRET', None),
     },
+    'olarm': {
+        'base_url': os.environ.get(
+            'IOTSERVER_OLARM_BASE_URL',
+            'https://api.olarm.com',
+        ),
+        'api_key': os.environ.get('IOTSERVER_OLARM_API_KEY', None),
+        'device_id': os.environ.get('IOTSERVER_OLARM_DEVICE_ID', None),
+    },
 }
 
 # GIS config
