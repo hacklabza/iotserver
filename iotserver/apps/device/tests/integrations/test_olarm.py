@@ -1,6 +1,10 @@
 import pytest
 
-from iotserver.apps.device.integrations.olarm import Olarm
+from iotserver.apps.device.integrations.olarm import (
+    ACTIVE_ALARM_EVENT_STATES,
+    DEACTIVATED_ALARM_EVENT_STATES,
+    Olarm,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -148,7 +152,7 @@ class TestOlarmIntegration(object):
 
         assert olarm.latest_event is None
 
-    @pytest.mark.parametrize('state', ['alarm', 'fire', 'emergency'])
+    @pytest.mark.parametrize('state', ACTIVE_ALARM_EVENT_STATES)
     def test_activated_when_latest_event_is_alarm(
         self, olarm, mock_requests, state
     ):
@@ -172,4 +176,14 @@ class TestOlarmIntegration(object):
         assert olarm.activated is False
 
     def test_not_activated_when_no_events(self, olarm, mock_requests):
+        assert olarm.activated is False
+
+    @pytest.mark.parametrize('state', DEACTIVATED_ALARM_EVENT_STATES)
+    def test_deactivated_when_latest_event_is_deactivated(
+        self, olarm, mock_requests, state
+    ):
+        set_events(
+            mock_requests, [area_event(100, 'arm'), area_event(200, state)]
+        )
+
         assert olarm.activated is False

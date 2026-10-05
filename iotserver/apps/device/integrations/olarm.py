@@ -4,7 +4,8 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 
-ALARM_EVENT_STATES = {'alarm', 'fire', 'emergency'}
+ACTIVE_ALARM_EVENT_STATES = {'alarm', 'fire', 'emergency'}
+DEACTIVATED_ALARM_EVENT_STATES = {'disarmed'}
 
 
 class Olarm(object):
@@ -51,4 +52,6 @@ class Olarm(object):
         event = self.latest_event
         if event is None:
             return False
-        return event.get('eventState') in ALARM_EVENT_STATES
+        if event.get('eventState') in DEACTIVATED_ALARM_EVENT_STATES:
+            return False
+        return event.get('eventState') in ACTIVE_ALARM_EVENT_STATES
