@@ -1,4 +1,3 @@
-from django.db.models import F
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,22 +5,6 @@ from rest_framework.response import Response
 from iotserver.apps.device import models
 from iotserver.apps.device.api import filters, serializers
 from iotserver.apps.device.integrations.weather import Location, Weather
-
-
-class SampleSizeMixin(object):
-    """
-    Only returns a smaple of the data in the query set based on the query
-    param: `sample_size`
-    """
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        sample_size = self.request.query_params.get('sample_size')
-        if sample_size is not None:
-            queryset = queryset.annotate(idmod4=F('id') % int(sample_size)).filter(
-                idmod4=0
-            )
-        return queryset
 
 
 class DeviceTypeViewSet(viewsets.ModelViewSet):
@@ -57,7 +40,7 @@ class DevicePinViewSet(viewsets.ModelViewSet):
     filterset_fields = ['devices', 'active']
 
 
-class DeviceStatusViewSet(SampleSizeMixin, viewsets.ModelViewSet):
+class DeviceStatusViewSet(viewsets.ModelViewSet):
     queryset = models.DeviceStatus.objects.all()
     serializer_class = serializers.DeviceStatusSerializer
     filterset_class = filters.DeviceStatusFilter
