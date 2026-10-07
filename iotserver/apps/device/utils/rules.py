@@ -211,6 +211,13 @@ def _resolve_rule_params(rule, rule_values, mqtt_values):
     """
     Resolves a rule's `input` into keyword arguments, evaluating any must/should
     conditions against previously collected rule values.
+
+    Must:
+        All conditions listed under `must` must be satisfied for the rule to
+        be considered valid.
+    Should:
+        At least one condition listed under `should` should be satisfied for
+        the rule to be considered valid.
     """
     rule_params = {}
     for key, value in rule['input'].items():
@@ -283,6 +290,12 @@ def run_device(device, stop_event: threading.Event) -> None:
 
     client = _build_mqtt_client(config['mqtt'], on_connect, on_message)
 
+    logging_kwargs = {
+        'client': client,
+        'device_id': device_id,
+        'logging_config': config['logging'],
+    }
+
     rule_values = {}
     previous_status_hash = None
     run_count = 0
@@ -297,6 +310,11 @@ def run_device(device, stop_event: threading.Event) -> None:
                     # Skip this pin if the current run count does not align with
                     # its interval.
                     if run_count % pin.get('interval', 1):
+                        _publish_log(
+                            level='debug',
+                            message=f'Skipping pin {pin["identifier"]} due to interval',
+                            **logging_kwargs,
+                        )
                         continue
 
                     # Get the resolved rule parameters for this pin.
@@ -304,11 +322,11 @@ def run_device(device, stop_event: threading.Event) -> None:
                     rule_params = _resolve_rule_params(
                         rule, rule_values, mqtt_values
                     )
+                    action = rule['action']
 
-                    value = RULE_ACTIONS[rule['action']](**rule_params)
-                    if rule['action'] == 'solarman_status' or (
-                        rule['action'] == 'service'
-                        and rule['input'].get('fields')
+                    value = RULE_ACTIONS[action](**rule_params)
+                    if action == 'solarman_status' or (
+                        action == 'service' and rule['input'].get('fields')
                     ):
                         # value is keyed by field path; namespace it under the
                         # pin's identifier to match how conditions reference it.
@@ -321,17 +339,22 @@ def run_device(device, stop_event: threading.Event) -> None:
                     else:
                         rule_values[pin['identifier']] = value
 
+                _publish_log(
+                    level='debug',
+                    message=(
+                        f'Completed rule: {action} with output: '
+                        f'{rule_values[pin["identifier"]]}.'
+                    ),
+                    **logging_kwargs,
+                )
                 previous_status_hash = _publish_status(
                     client, device_id, rule_values, previous_status_hash
                 )
             except Exception:
-                logger.exception('Error running rules for device %s', device_id)
                 _publish_log(
-                    client,
-                    device_id,
-                    config['logging'],
-                    'error',
-                    f'Error running rules for device {device_id}',
+                    level='error',
+                    message=f'Error running rules for device {device_id}',
+                    **logging_kwargs,
                 )
 
             # Increment the run count and wait for the next processing interval.
