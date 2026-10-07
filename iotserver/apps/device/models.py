@@ -85,7 +85,8 @@ class Device(models.Model):
     def full_config(self):
         config = self.config
         config['pins'] = [
-            pin.config for pin in self.pins.filter(active=True).order_by('-pin_number')
+            pin.config
+            for pin in self.pins.filter(active=True).order_by('-pin_number')
         ]
         return config
 
@@ -184,6 +185,8 @@ class DeviceHealth(models.Model):
     device = models.OneToOneField(
         Device, on_delete=models.CASCADE, related_name='health'
     )
+    wifi_signal_strength = models.IntegerField(blank=True, null=True)
+    battery_level = models.IntegerField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -224,7 +227,11 @@ class SonoffToken(models.Model):
 @receiver(pre_save, sender=Device)
 def handle_device_default_config(sender, instance, *args, **kwargs):
     """Get the config from the managed new device and update the config field."""
-    if settings.AUTO_SYNC_DEVICE and instance.managed_firmware and instance.active:
+    if (
+        settings.AUTO_SYNC_DEVICE
+        and instance.managed_firmware
+        and instance.active
+    ):
         if instance.config is None:
             temp_file_path = f'/tmp/config.{instance.id}.json'
             with open(temp_file_path, 'w') as input_file:
@@ -236,7 +243,9 @@ def handle_device_default_config(sender, instance, *args, **kwargs):
                     settings.WEBREPL_PORT,
                     settings.WEBREPL_PASSWORD,
                 )
-                webrepl.get_file(web_socket, temp_file_path, 'config/config.json')
+                webrepl.get_file(
+                    web_socket, temp_file_path, 'config/config.json'
+                )
                 _socket.close()
             except OSError as error:
                 raise exceptions.DeviceUnreachableError(
@@ -265,14 +274,20 @@ def handle_device_default_config(sender, instance, *args, **kwargs):
 @receiver(post_save, sender=Device)
 def handle_device_config_update(sender, instance, *args, **kwargs):
     """Update config on the managed physical device via webrepl."""
-    if settings.AUTO_SYNC_DEVICE and instance.managed_firmware and instance.active:
+    if (
+        settings.AUTO_SYNC_DEVICE
+        and instance.managed_firmware
+        and instance.active
+    ):
         temp_file_path = f'/tmp/config.{instance.id}.json'
         with open(temp_file_path, 'w') as input_file:
             input_file.write(json.dumps(instance.full_config, indent=4))
 
         try:
             _socket, web_socket = webrepl.get_websocket(
-                instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+                instance.ip_address,
+                settings.WEBREPL_PORT,
+                settings.WEBREPL_PASSWORD,
             )
             webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
             _socket.close()

@@ -73,14 +73,18 @@ class DeviceModelAdmin(admin.ModelAdmin):
     )
     list_filter = ('active', 'managed_firmware', 'type__name', 'location__name')
     formfield_overrides = {
-        JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
+        JSONField: {
+            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
+        }
     }
 
     def save_model(self, request, obj, form, change):
         try:
             super().save_model(request, obj, form, change)
         except exceptions.DeviceUnreachableError as error:
-            messages.add_message(request, level=messages.WARNING, message=str(error))
+            messages.add_message(
+                request, level=messages.WARNING, message=str(error)
+            )
 
 
 @admin.register(models.DevicePinType)
@@ -103,7 +107,9 @@ class DevicePinModelAdmin(admin.ModelAdmin):
     list_filter = ('devices__name', 'active')
     prepopulated_fields = {'identifier': ('name',)}
     formfield_overrides = {
-        JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
+        JSONField: {
+            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
+        }
     }
 
 
@@ -112,32 +118,48 @@ class DeviceStatusModelAdmin(admin.ModelAdmin):
     list_display = ('device', 'created_at')
     list_filter = ('device__name', 'created_at')
     formfield_overrides = {
-        JSONField: {'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})}
+        JSONField: {
+            'widget': widgets.PrettyJSONWidget(attrs={'rows': 20, 'cols': 120})
+        }
     }
 
 
 @admin.register(models.DeviceHealth)
 class DeviceHealthModelAdmin(admin.ModelAdmin):
-    list_display = ('device', 'updated_at', 'status')
+    list_display = (
+        'device',
+        'updated_at',
+        'status',
+        'battery_level',
+        'wifi_signal_strength',
+    )
     list_filter = ('device__name', 'updated_at')
 
     def status(self, obj):
         if obj.status:
-            return mark_safe('<img src="/static/admin/img/icon-yes.svg" alt="True">')
-        return mark_safe('<img src="/static/admin/img/icon-no.svg" alt="False">')
+            return mark_safe(
+                '<img src="/static/admin/img/icon-yes.svg" alt="True">'
+            )
+        return mark_safe(
+            '<img src="/static/admin/img/icon-no.svg" alt="False">'
+        )
 
     status.short_description = "Status"
 
 
 @admin.register(models.Location)
 class LocationModelAdmin(admin.ModelAdmin):
-    formfield_overrides = {gis_models.PointField: {'widget': GoogleMapPointFieldWidget}}
+    formfield_overrides = {
+        gis_models.PointField: {'widget': GoogleMapPointFieldWidget}
+    }
     list_display = ('name', 'position')
 
 
 @admin.register(models.SonoffToken)
 class SonoffTokenModelAdmin(admin.ModelAdmin):
-    """Read-only view of the OAuth token; connect via /integrations/sonoff/authorize/."""
+    """
+    Read-only view of the OAuth token; connect via  /integrations/sonoff/authorize/.
+    """
 
     list_display = (
         'region',
