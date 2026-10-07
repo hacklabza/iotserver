@@ -37,6 +37,7 @@ class DeviceModelAdmin(admin.ModelAdmin):
             None,
             {
                 'fields': (
+                    'id',
                     'active',
                     'managed_firmware',
                     'name',
@@ -61,6 +62,7 @@ class DeviceModelAdmin(admin.ModelAdmin):
             },
         ),
     )
+    readonly_fields = ('id',)
     list_display = (
         'name',
         'description',
