@@ -15,6 +15,28 @@ class TestFindXpathValue:
         # xpaths are passed in already reversed, e.g. 'a.b' -> ['b', 'a']
         assert rules.find_xpath_value({'a': {'b': 2}}, ['b', 'a']) == 2
 
+    def test_returns_nested_dotted_key(self):
+        assert (
+            rules.find_xpath_value(
+                {'service': {'a.b': 2}}, ['b', 'a', 'service']
+            )
+            == 2
+        )
+
+    def test_exact_dotted_key_takes_precedence(self):
+        assert (
+            rules.find_xpath_value({'a.b': None, 'a': {'b': 2}}, ['b', 'a'])
+            is None
+        )
+
+    def test_preserves_list_index_lookup(self):
+        assert (
+            rules.find_xpath_value(
+                {'values': [{'value': 2}]}, ['value', 0, 'values']
+            )
+            == 2
+        )
+
     def test_returns_none_for_missing_key(self):
         assert rules.find_xpath_value({'a': 1}, ['missing']) is None
 
@@ -63,6 +85,36 @@ class TestEvaluateCondition:
         assert rules.handle_conditions(rule_values, input_value) == {
             'must': [True, True],
             'should': [True],
+        }
+
+    @pytest.mark.parametrize(
+        'rule_values, expected',
+        [
+            ({'solar': {'battery_soc': 71.0}}, True),
+            ({'solar': {}}, False),
+            ({'solar': False}, False),
+            (
+                {'solar.battery_soc': 65.0, 'solar': {'battery_soc': 71.0}},
+                False,
+            ),
+            (
+                {'solar.battery_soc': None, 'solar': {'battery_soc': 71.0}},
+                False,
+            ),
+        ],
+    )
+    def test_nested_condition_lookup_preserves_exact_keys(
+        self, rule_values, expected
+    ):
+        input_value = {
+            'conditions': {
+                'must': {'solar.battery_soc': {'operator': 'gt', 'value': 70}}
+            }
+        }
+
+        assert rules.handle_conditions(rule_values, input_value) == {
+            'must': [expected],
+            'should': [],
         }
 
 
@@ -609,7 +661,19 @@ class TestRunDevice:
             'iot-devices/device-1/toggle'
         )
 
-    def test_service_rule_only_stores_configured_fields(self, mocker):
+    @pytest.mark.parametrize(
+        'fields, service_status',
+        [
+            (
+                ['last_status.status.light-sensor'],
+                {'last_status.status.light-sensor': 19.8},
+            ),
+            (None, {'last_status': {'status': {'light-sensor': 19.8}}}),
+        ],
+    )
+    def test_service_rule_keeps_result_nested(
+        self, mocker, fields, service_status
+    ):
         stop_event = threading.Event()
         mock_client = mocker.Mock()
         mocker.patch(
@@ -621,15 +685,14 @@ class TestRunDevice:
             'iotserver.apps.device.utils.rules._publish_status',
             side_effect=lambda *a, **k: stop_event.set(),
         )
+        mock_toggle = mocker.Mock(return_value=False)
         # RULE_ACTIONS binds the action functions directly, so patching the
         # module-level names doesn't affect dispatch -- patch the dict instead.
         mocker.patch.dict(
             'iotserver.apps.device.utils.rules.RULE_ACTIONS',
             {
-                'service': mocker.Mock(
-                    return_value={'last_status.status.light-sensor': 19.8}
-                ),
-                'sonoff_toggle': mocker.Mock(return_value=False),
+                'service': mocker.Mock(return_value=service_status),
+                'sonoff_toggle': mock_toggle,
             },
         )
 
@@ -643,7 +706,7 @@ class TestRunDevice:
                         'action': 'service',
                         'input': {
                             'url': 'http://x/',
-                            'fields': ['last_status.status.light-sensor'],
+                            'fields': fields,
                         },
                     },
                 },
@@ -674,11 +737,12 @@ class TestRunDevice:
 
         rule_values = mock_publish_status.call_args[0][2]
         assert rule_values == {
-            'light-sensor-service.last_status.status.light-sensor': 19.8,
+            'light-sensor-service': service_status,
             'sonoff-switch': False,
         }
+        mock_toggle.assert_called_once_with(device_id='abc123', on=True)
 
-    def test_solarman_status_fields_are_namespaced(self, mocker):
+    def test_solarman_status_is_nested(self, mocker):
         stop_event = threading.Event()
         mocker.patch(
             'iotserver.apps.device.utils.rules._build_mqtt_client',
@@ -689,12 +753,18 @@ class TestRunDevice:
             'iotserver.apps.device.utils.rules._publish_status',
             side_effect=lambda *a, **k: stop_event.set(),
         )
+        mock_toggle = mocker.Mock(return_value=True)
         mocker.patch.dict(
             'iotserver.apps.device.utils.rules.RULE_ACTIONS',
             {
                 'solarman_status': mocker.Mock(
-                    return_value={'battery_soc': 71.0, 'solar_input': 1200.0}
+                    return_value={
+                        'battery_soc': 71.0,
+                        'solar_input': 1200.0,
+                        'current_consumption': 515.0,
+                    }
                 ),
+                'sonoff_toggle': mock_toggle,
             },
         )
 
@@ -708,7 +778,26 @@ class TestRunDevice:
                         'action': 'solarman_status',
                         'input': {'station_id': 3208097},
                     },
-                }
+                },
+                {
+                    'identifier': 'solar-switch',
+                    'rule': {
+                        'action': 'sonoff_toggle',
+                        'input': {
+                            'device_id': 'abc123',
+                            'on': {
+                                'conditions': {
+                                    'must': {
+                                        'solar.battery_soc': {
+                                            'operator': 'gt',
+                                            'value': 70,
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                    },
+                },
             ],
         )
 
@@ -716,6 +805,11 @@ class TestRunDevice:
 
         rule_values = mock_publish_status.call_args[0][2]
         assert rule_values == {
-            'solar.battery_soc': 71.0,
-            'solar.solar_input': 1200.0,
+            'solar': {
+                'battery_soc': 71.0,
+                'solar_input': 1200.0,
+                'current_consumption': 515.0,
+            },
+            'solar-switch': True,
         }
+        mock_toggle.assert_called_once_with(device_id='abc123', on=True)

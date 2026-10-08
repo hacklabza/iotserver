@@ -30,6 +30,12 @@ def find_xpath_value(response, xpaths):
     Recursively finds a value in a nested dict/list structure based on a list of
     xpaths. `xpaths` must be reversed before being passed in.
     """
+    if isinstance(response, dict) and all(
+        isinstance(path, str) for path in xpaths
+    ):
+        remaining_path = '.'.join(reversed(xpaths))
+        if remaining_path in response:
+            return response[remaining_path]
     xpath = xpaths.pop()
 
     try:
@@ -56,15 +62,20 @@ def evaluate_condition(input, operator, value):
 def handle_conditions(rule_values, input_value):
     """
     Returns a dict of `must`/`should` condition boolean lists to be
-    evaluated. `rule_values` is flat, keyed by either a pin identifier or,
-    for `service` rule fields, the full dotted xpath referenced by the condition.
+    evaluated. Exact keys take precedence over dotted paths into nested
+    integration statuses, including selected `service` field keys.
     """
     condition_values = {'must': [], 'should': []}
     for condition_type, conditions in input_value['conditions'].items():
         if condition_type in condition_values:
             for xpath, condition in conditions.items():
+                condition_value = (
+                    rule_values[xpath]
+                    if xpath in rule_values
+                    else find_xpath_value(rule_values, xpath.split('.')[::-1])
+                )
                 condition_values[condition_type].append(
-                    evaluate_condition(rule_values.get(xpath), **condition)
+                    evaluate_condition(condition_value, **condition)
                 )
 
     return condition_values
@@ -337,19 +348,7 @@ def run_device(device, stop_event: threading.Event) -> None:
                     action = rule['action']
 
                     value = RULE_ACTIONS[action](**rule_params)
-                    if action == 'solarman_status' or (
-                        action == 'service' and rule['input'].get('fields')
-                    ):
-                        # value is keyed by field path; namespace it under the
-                        # pin's identifier to match how conditions reference it.
-                        rule_values.update(
-                            {
-                                f"{pin['identifier']}.{field}": field_value
-                                for field, field_value in value.items()
-                            }
-                        )
-                    else:
-                        rule_values[pin['identifier']] = value
+                    rule_values[pin['identifier']] = value
 
                     _publish_log(
                         level='debug',
