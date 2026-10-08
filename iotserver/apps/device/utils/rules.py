@@ -339,14 +339,14 @@ def run_device(device, stop_event: threading.Event) -> None:
                     else:
                         rule_values[pin['identifier']] = value
 
-                _publish_log(
-                    level='debug',
-                    message=(
-                        f'Completed rule: {action} with output: '
-                        f'{rule_values[pin["identifier"]]}.'
-                    ),
-                    **logging_kwargs,
-                )
+                    _publish_log(
+                        level='debug',
+                        message=(
+                            f'Completed rule: {action} with output: {value}.'
+                        ),
+                        **logging_kwargs,
+                    )
+
                 previous_status_hash = _publish_status(
                     client, device_id, rule_values, previous_status_hash
                 )
