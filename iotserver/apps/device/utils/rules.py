@@ -8,6 +8,7 @@ import requests
 from django.utils import timezone
 
 from iotserver.apps.device.integrations.olarm import Olarm
+from iotserver.apps.device.integrations.rainpoint import RainPoint
 from iotserver.apps.device.integrations.solarman import Solarman
 from iotserver.apps.device.integrations.sonoff import Sonoff
 
@@ -167,6 +168,16 @@ def solarman_status(**kwargs):
     return solarman.real_time
 
 
+def rainpoint_status(**kwargs):
+    """Return decoded sensor readings for the configured RainPoint hub."""
+    hub_id = kwargs.get('hub_id')
+    cache_timeout = kwargs.get('cache_timeout')
+
+    rainpoint = RainPoint(hub_id, cache_timeout=cache_timeout)
+
+    return rainpoint.statuses
+
+
 # Explicit whitelist of callable rule actions, rather than `getattr` on this
 # module, so `rule['action']` (data, not code) can't invoke arbitrary attributes.
 RULE_ACTIONS = {
@@ -176,6 +187,7 @@ RULE_ACTIONS = {
     'sonoff_toggle': sonoff_toggle,
     'olarm_activated': olarm_activated,
     'solarman_status': solarman_status,
+    'rainpoint_status': rainpoint_status,
 }
 
 

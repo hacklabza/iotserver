@@ -266,6 +266,29 @@ class TestSolarmanStatus:
         mock_solarman_cls.assert_called_once_with(3208097, cache_timeout=30)
 
 
+class TestRainPointStatus:
+    @pytest.mark.parametrize('cache_timeout', [None, 30, 0])
+    def test_returns_statuses(self, mocker, cache_timeout):
+        statuses = {
+            'rainfall': 1.5,
+            'temperature': 21.0,
+            'humidity': 66,
+            'pool_temperature': 20.8,
+        }
+        mock_client = mocker.patch(
+            'iotserver.apps.device.utils.rules.RainPoint'
+        )
+        mock_client.return_value.statuses = statuses
+
+        rainpoint_status = rules.rainpoint_status(
+            hub_id='hub-1', cache_timeout=cache_timeout
+        )
+        assert rainpoint_status == statuses
+        mock_client.assert_called_once_with(
+            'hub-1', cache_timeout=cache_timeout
+        )
+
+
 def test_rule_actions_dispatch_table():
     assert rules.RULE_ACTIONS == {
         'timer': rules.timer,
@@ -274,6 +297,7 @@ def test_rule_actions_dispatch_table():
         'sonoff_toggle': rules.sonoff_toggle,
         'olarm_activated': rules.olarm_activated,
         'solarman_status': rules.solarman_status,
+        'rainpoint_status': rules.rainpoint_status,
     }
 
 
