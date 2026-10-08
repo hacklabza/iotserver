@@ -44,8 +44,7 @@ class DeviceFactory(factory.django.DjangoModelFactory):
 class DevicePinFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.DevicePin
-
-    device = factory.SubFactory(DeviceFactory)
+        skip_postgeneration_save = True
 
     name = factory.fuzzy.FuzzyText(length=12)
     identifier = factory.LazyAttribute(lambda obj: slugify(obj.name))
@@ -57,6 +56,14 @@ class DevicePinFactory(factory.django.DjangoModelFactory):
 
     rule = {}
 
+    @factory.post_generation
+    def devices(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for device in extracted:
+                self.devices.add(device)
+
 
 class DeviceStatusFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -64,3 +71,10 @@ class DeviceStatusFactory(factory.django.DjangoModelFactory):
 
     device = factory.SubFactory(DeviceFactory)
     status = {}
+
+
+class DeviceHealthFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.DeviceHealth
+
+    device = factory.SubFactory(DeviceFactory)

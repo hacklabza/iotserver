@@ -9,7 +9,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
@@ -17,10 +16,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('IOTSERVER_SECRET_KEY', 'insecure-secretkey')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('IOTSERVER_DJANGO_DEBUG', '1') == '1'
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 INSTALLED_APPS = [
@@ -33,6 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     # 3rd party apps
     'corsheaders',
+    'django_filters',
+    'drf_spectacular',
     'mapwidgets',
     'rest_framework',
     'rest_framework_gis',
@@ -73,16 +73,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'iotserver.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'iotserver',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
+        'NAME': os.environ.get('IOTSERVER_POSTGRES_DBNAME', 'iotserver'),
+        'USER': os.environ.get('IOTSERVER_POSTGRES_USER', ''),
+        'PASSWORD': os.environ.get('IOTSERVER_POSTGRES_PASSWORD', ''),
+        'HOST': os.environ.get('IOTSERVER_POSTGRES_HOST', 'localhost'),
         'PORT': '5432',
     }
 }
@@ -91,17 +90,18 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': '127.0.0.1:11211',
-        'TIMEOUT': (60 * 15),  # 15 mins
+        'LOCATION': os.environ.get(
+            'IOTSERVER_MEMCACHED_LOCATION', 'localhost:11211'
+        ),
+        'TIMEOUT': (60 * 60),  # 1 hour
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',  # noqa: E501
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
@@ -114,32 +114,56 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.DjangoModelPermissions'],
-}
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Johannesburg'
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 # CORS Setup
-CORS_ORIGIN_WHITELIST = [
-    os.environ.get('IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'),
-]
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    'IOTSERVER_CORS_ORIGIN_WHITELIST', 'http://localhost:3000'
+).split(',')
+CORS_ALLOW_ALL_ORIGINS = (
+    os.environ.get('IOTSERVER_CORS_ALLOW_ALL_ORIGINS') == '1'
+)
+
+# Geodjango GDAL library path
+GDAL_LIBRARY_PATH = os.environ.get('IOTSERVER_GDAL_LIBRARY_PATH', None)
+GEOS_LIBRARY_PATH = os.environ.get('IOTSERVER_GEOS_LIBRARY_PATH', None)
+
+# Django Rest Framework config
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.DjangoModelPermissions',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Spectacular settings - OpenAPI 3
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'IoTServer API',
+    'DESCRIPTION': 'Simple IoT Server, Configuration Tool & Dashboard',
+    'VERSION': '0.9.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
 
 # MQTT settings
 MQTT = {
@@ -149,31 +173,129 @@ MQTT = {
 
 # Integration config
 INTEGRATIONS = {
+    'sonoff': {
+        'app_id': os.environ.get('IOTSERVER_SONOFF_APP_ID', None),
+        'app_secret': os.environ.get('IOTSERVER_SONOFF_APP_SECRET', None),
+        'region': os.environ.get('IOTSERVER_SONOFF_REGION', 'eu'),
+        'redirect_url': os.environ.get(
+            'IOTSERVER_SONOFF_REDIRECT_URL',
+            'http://localhost:8000/integrations/sonoff/callback/',
+        ),
+        'authorize_url': os.environ.get(
+            'IOTSERVER_SONOFF_AUTHORIZE_URL',
+            'https://c2ccdn.coolkit.cc/oauth/index.html',
+        ),
+        'token_url': os.environ.get(
+            'IOTSERVER_SONOFF_TOKEN_URL',
+            'https://eu-apia.coolkit.cc/v2/user/oauth/token',
+        ),
+        'refresh_url': os.environ.get(
+            'IOTSERVER_SONOFF_REFRESH_URL',
+            'https://eu-apia.coolkit.cc/v2/user/refresh',
+        ),
+        'device_url': os.environ.get(
+            'IOTSERVER_SONOFF_DEVICE_URL',
+            'https://eu-apia.coolkit.cc/v2/device/thing/status',
+        ),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_SONOFF_CACHE_TIMEOUT', 60 * 5)
+        ),
+    },
     'weather': {
         'url': os.environ.get(
             'IOTSERVER_OPENWEATHER_URL',
-            'https://api.openweathermap.org/data/2.5/onecall',
+            'https://api.openweathermap.org/data/3.0/onecall',
         ),
-        'api_key': os.environ.get('IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'),
-    }
+        'api_key': os.environ.get(
+            'IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'
+        ),
+    },
+    'solarman': {
+        'base_url': os.environ.get(
+            'IOTSERVER_SOLARMAN_BASE_URL',
+            'https://globalapi.solarmanpv.com',
+        ),
+        'email': os.environ.get('IOTSERVER_SOLARMAN_EMAIL', None),
+        'password': os.environ.get('IOTSERVER_SOLARMAN_PASSWORD', None),
+        'app_id': os.environ.get('IOTSERVER_SOLARMAN_APP_ID', None),
+        'app_secret': os.environ.get('IOTSERVER_SOLARMAN_APP_SECRET', None),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_SOLARMAN_CACHE_TIMEOUT', 60 * 5)
+        ),
+    },
+    'rainpoint': {
+        'base_url': os.environ.get(
+            'IOTSERVER_RAINPOINT_BASE_URL', 'https://region3.homgarus.com'
+        ),
+        'email': os.environ.get('IOTSERVER_RAINPOINT_EMAIL', None),
+        'password': os.environ.get('IOTSERVER_RAINPOINT_PASSWORD', None),
+        'app_code': os.environ.get('IOTSERVER_RAINPOINT_APP_CODE', '2'),
+        'area_code': os.environ.get('IOTSERVER_RAINPOINT_AREA_CODE', '27'),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_RAINPOINT_CACHE_TIMEOUT', 60)
+        ),
+    },
+    'olarm': {
+        'base_url': os.environ.get(
+            'IOTSERVER_OLARM_BASE_URL',
+            'https://api.olarm.com',
+        ),
+        'api_key': os.environ.get('IOTSERVER_OLARM_API_KEY', None),
+        'device_id': os.environ.get('IOTSERVER_OLARM_DEVICE_ID', None),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_OLARM_CACHE_TIMEOUT', 60)
+        ),
+    },
 }
 
 # GIS config
 MAP_WIDGETS = {
-    'GooglePointFieldWidget': (
-        ('zoom', 15),
-        ('mapCenterLocation', [-26.190, 28.050]),
-        (
-            'GooglePlaceAutocompleteOptions',
-            {'componentRestrictions': {'country': 'za'}},
+    'GoogleMap': {
+        'apiKey': os.environ.get(
+            'IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'
         ),
-        ('markerFitZoom', 12),
-    ),
-    'GOOGLE_MAP_API_KEY': os.environ.get(
-        'IOTSERVER_GOOGLEMAPS_APIKEY', 'googlemaps-key'
-    ),
+        'PointField': {
+            'interactive': {
+                'mapOptions': {'zoom': 15, 'center': [-26.190, 28.050]},
+                'GooglePlaceAutocompleteOptions': {
+                    'componentRestrictions': {'country': 'za'}
+                },
+                'markerFitZoom': 12,
+            }
+        },
+    },
 }
+
+# Device syncing
+AUTO_SYNC_DEVICE = os.environ.get('IOTSERVER_AUTO_SYNC_DEVICE', '0') == '1'
 
 # Webrepl config
 WEBREPL_PORT = os.environ.get('IOTSERVER_WEBREPL_PORT', 8266)
-WEBREPL_PASSWORD = os.environ.get('IOTSERVER_WEBREPL_PASSWORD', 'webrepl-password')
+WEBREPL_PASSWORD = os.environ.get(
+    'IOTSERVER_WEBREPL_PASSWORD', 'webrepl-password'
+)
+
+# Default config generated for devices with unmanaged firmware
+DEVICE_HEALTH_URL = os.environ.get(
+    'IOTSERVER_DEVICE_HEALTH_URL', 'http://localhost:8000/health/{identifier}/'
+)
+DEVICE_DEFAULT_CONFIG = {
+    'mqtt': {
+        'client_id': '{identifier}',
+        'host': MQTT['host'],
+        'username': None,
+        'password': None,
+        'ssl_enabled': False,
+        'lastwill': {
+            'topic': 'iot-devices/{identifier}/logs',
+            'message': 'Device disconnected from MQTT',
+        },
+    },
+    'logging': {'level': 'warning'},
+    'main': {
+        'identifier': '{identifier}',
+        'process_interval': 15,
+    },
+    'health': {'url': DEVICE_HEALTH_URL},
+    'pins': [],
+}

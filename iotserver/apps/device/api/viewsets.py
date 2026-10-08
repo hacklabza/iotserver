@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from iotserver.apps.device import models
-from iotserver.apps.device.api import serializers
+from iotserver.apps.device.api import filters, serializers
 from iotserver.apps.device.integrations.weather import Location, Weather
 
 
@@ -14,22 +14,50 @@ class DeviceTypeViewSet(viewsets.ModelViewSet):
 
 class DeviceViewSet(viewsets.ModelViewSet):
     queryset = models.Device.objects.all()
-    serializer_class = serializers.DeviceSerializer
+    filterset_fields = ['type', 'active']
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return serializers.DeviceListDetailSerializer
+        return serializers.DeviceCreateUpdateSerializer
+
+    @action(detail=True, methods=['post'])
+    def toggle(self, request, pk=None):
+        device = self.get_object()
+        state = request.data.get('state')
+        if state is None or state not in ['on', 'off']:
+            return Response(
+                data={'detail': 'State must either be `on` or `off`'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        device.mqtt_toggle(state)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 class DevicePinViewSet(viewsets.ModelViewSet):
     queryset = models.DevicePin.objects.all()
     serializer_class = serializers.DevicePinSerializer
+    filterset_fields = ['devices', 'active']
 
 
 class DeviceStatusViewSet(viewsets.ModelViewSet):
     queryset = models.DeviceStatus.objects.all()
     serializer_class = serializers.DeviceStatusSerializer
+    filterset_class = filters.DeviceStatusFilter
+    ordering_fields = ['created_at']
+    ordering = ['created_at']
+
+
+class DeviceHealthViewSet(viewsets.ModelViewSet):
+    queryset = models.DeviceHealth.objects.all()
+    serializer_class = serializers.DeviceHealthSerializer
+    filterset_fields = ['device']
 
 
 class LocationViewSet(viewsets.ModelViewSet):
     queryset = models.Location.objects.all()
     serializer_class = serializers.LocationSerializer
+    filterset_fields = ['device']
 
     @action(detail=True, methods=['get'])
     def weather(self, request, pk=None):
@@ -46,6 +74,6 @@ class LocationViewSet(viewsets.ModelViewSet):
             return Response(data=getattr(weather, forecast_type))
         except AttributeError:
             return Response(
-                data={'error': 'Incorrect forecast type'},
+                data={'detail': 'Incorrect forecast type'},
                 status=status.HTTP_400_BAD_REQUEST,
             )

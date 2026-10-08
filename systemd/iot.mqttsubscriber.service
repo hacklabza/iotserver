@@ -1,0 +1,13 @@
+[Unit]
+Description=mqtt subscriber daemon
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/iotserver
+Environment="PATH=/home/pi/.local/bin:$PATH"
+ExecStart=/home/pi/.local/bin/poetry run manage.py mqtt
+
+[Install]
+WantedBy=multi-user.target

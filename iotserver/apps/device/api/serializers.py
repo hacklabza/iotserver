@@ -1,4 +1,3 @@
-from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework_gis import serializers as gis_serializers
 
@@ -12,51 +11,76 @@ class LocationSerializer(gis_serializers.GeoModelSerializer):
         fields = '__all__'
 
 
-class DeviceTypeSerializer(serializers.HyperlinkedModelSerializer):
+class DeviceTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.DeviceType
         fields = '__all__'
 
 
-class DeviceSerializer(serializers.HyperlinkedModelSerializer):
-    device_type = serializers.HyperlinkedRelatedField(
-        many=False, read_only=True, view_name='devicetype-detail'
+class DevicePinTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.DevicePinType
+        fields = '__all__'
+
+
+class DevicePinSerializer(serializers.ModelSerializer):
+    devices = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=models.Device.objects.all()
     )
-    location = serializers.HyperlinkedRelatedField(
-        many=False, view_name='location-detail', queryset=models.Location.objects.all()
-    )
-    pins = serializers.HyperlinkedRelatedField(
-        many=True, read_only=True, view_name='devicepin-detail'
-    )
-    statuses = serializers.HyperlinkedRelatedField(
-        many=True, read_only=True, view_name='devicestatus-detail'
-    )
+    type = DevicePinTypeSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = models.DevicePin
+        fields = '__all__'
+
+
+class DeviceStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.DeviceStatus
+        fields = '__all__'
+
+
+class DeviceHealthSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.DeviceHealth
+        fields = '__all__'
+
+    def get_status(self, instance):
+        return instance.status
+
+
+class DeviceListDetailSerializer(serializers.ModelSerializer):
+    type = DeviceTypeSerializer(many=False, read_only=True)
+    location = LocationSerializer(many=False, read_only=True)
+    pins = DevicePinSerializer(many=True, read_only=True)
+    last_status = serializers.SerializerMethodField()
+    aggregated_status = serializers.SerializerMethodField()
+    health = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Device
         fields = '__all__'
         lookup_field = 'id'
 
+    def get_last_status(self, instance):
+        if instance.last_status:
+            return DeviceStatusSerializer(instance.last_status).data
 
-class DevicePinSerializer(serializers.HyperlinkedModelSerializer):
-    device = serializers.HyperlinkedRelatedField(
-        many=False, view_name='device-detail', queryset=models.Device.objects.all()
-    )
-    identifier = serializers.SerializerMethodField()
+    def get_aggregated_status(self, instance):
+        if instance.aggregate_statuses:
+            return instance.aggregate_statuses
 
+    def get_health(self, instance):
+        try:
+            return DeviceHealthSerializer(instance.health).data
+        except models.Device.health.RelatedObjectDoesNotExist:
+            return None
+
+
+class DeviceCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.DevicePin
+        model = models.Device
         fields = '__all__'
-
-    def get_identifier(self, instance):
-        return slugify(instance.name)
-
-
-class DeviceStatusSerializer(serializers.HyperlinkedModelSerializer):
-    device = serializers.HyperlinkedRelatedField(
-        many=False, read_only=True, view_name='device-detail'
-    )
-
-    class Meta:
-        model = models.DeviceStatus
-        fields = '__all__'
+        lookup_field = 'id'

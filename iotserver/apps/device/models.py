@@ -7,9 +7,11 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 
-from iotserver.apps.device.utils import webrepl
+from iotserver.apps.device import constants, exceptions
+from iotserver.apps.device.utils import mqtt, stats, webrepl
 
 
 class Location(models.Model):
@@ -33,6 +35,7 @@ class Location(models.Model):
 
 class DeviceType(models.Model):
     name = models.CharField(max_length=32)
+    identifier = models.SlugField(max_length=64, unique=True, null=True)
 
     def __str__(self):
         return self.name
@@ -49,6 +52,7 @@ class Device(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     active = models.BooleanField(default=False)
+    managed_firmware = models.BooleanField(default=True)
 
     name = models.CharField(max_length=128)
     description = models.CharField(max_length=1024)
@@ -60,13 +64,13 @@ class Device(models.Model):
         null=True,
         related_name='devices',
     )
-    location = models.OneToOneField(
+    location = models.ForeignKey(
         Location, on_delete=models.SET_NULL, blank=True, null=True
     )
 
-    ip_address = models.GenericIPAddressField()
-    mac_address = models.CharField(max_length=48)
-    hostname = models.CharField(max_length=64)
+    ip_address = models.GenericIPAddressField(unique=True)
+    mac_address = models.CharField(max_length=48, unique=True)
+    hostname = models.CharField(max_length=64, blank=True, null=True)
 
     config = models.JSONField(blank=True, null=True)
 
@@ -77,25 +81,63 @@ class Device(models.Model):
     def resource_url(self):
         return reverse('device-detail', kwargs={'pk': str(self.id)})
 
-    @cached_property
+    @property
     def full_config(self):
         config = self.config
-        config['pins'] = [pin.config for pin in self.pins.all().order_by('-pin_number')]
+        config['pins'] = [
+            pin.config
+            for pin in self.pins.filter(active=True).order_by('-pin_number')
+        ]
         return config
+
+    @cached_property
+    def last_status(self):
+        return self.statuses.first()
+
+    @cached_property
+    def aggregate_statuses(self):
+        return stats.aggregate_statuses(self.statuses)
+
+    def mqtt_toggle(self, state: str):
+        mqtt.toggle(self.id, str(constants.DEVICE_TOGGLE_STATE[state]))
+
+
+class DevicePinType(models.Model):
+    name = models.CharField(max_length=32)
+    identifier = models.SlugField(max_length=64, unique=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+    @cached_property
+    def resource_url(self):
+        return reverse('devicetype-detail', kwargs={'pk': self.pk})
 
 
 class DevicePin(models.Model):
-    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='pins')
+    active = models.BooleanField(default=True)
+
+    devices = models.ManyToManyField(Device, related_name='pins')
 
     name = models.CharField(max_length=32)
-    identifier = models.SlugField(max_length=64)
+    identifier = models.SlugField(max_length=64, unique=True)
     pin_number = models.PositiveSmallIntegerField(blank=True, null=True)
+    type = models.ForeignKey(
+        DevicePinType,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='pins',
+    )
 
     interval = models.IntegerField(default=1)
     analog = models.BooleanField(default=False)
     read = models.BooleanField(default=False)
+    i2c = models.BooleanField(default=False)
 
     rule = models.JSONField(null=False)
+
+    display = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -113,6 +155,7 @@ class DevicePin(models.Model):
             'interval': self.interval,
             'analog': self.analog,
             'read': self.read,
+            'i2c': self.i2c,
             'rule': self.rule,
         }
 
@@ -128,6 +171,7 @@ class DeviceStatus(models.Model):
 
     class Meta:
         verbose_name_plural = 'Device Statuses'
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.device.name
@@ -137,42 +181,117 @@ class DeviceStatus(models.Model):
         return reverse('devicestatus-detail', kwargs={'pk': self.pk})
 
 
+class DeviceHealth(models.Model):
+    device = models.OneToOneField(
+        Device, on_delete=models.CASCADE, related_name='health'
+    )
+    wifi_signal_strength = models.IntegerField(blank=True, null=True)
+    battery_level = models.IntegerField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = 'Device Health'
+
+    def __str__(self):
+        return self.device.name
+
+    @cached_property
+    def resource_url(self):
+        return reverse('devicehealth-detail', kwargs={'pk': self.pk})
+
+    @cached_property
+    def status(self):
+        return self.updated_at > timezone.now() - timezone.timedelta(minutes=1)
+
+
+class SonoffToken(models.Model):
+    """Singleton row holding the eWeLink OAuth token pair for the Sonoff integration."""
+
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    access_token_expires_at = models.DateTimeField()
+    refresh_token_expires_at = models.DateTimeField()
+    region = models.CharField(max_length=8)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Sonoff Token'
+
+    def __str__(self):
+        return f'Sonoff token ({self.region})'
+
+
 @receiver(pre_save, sender=Device)
 def handle_device_default_config(sender, instance, *args, **kwargs):
-    """Get the config from the new device and update the config field."""
-    if instance.config is None:
-        temp_file_path = f'/tmp/config.{instance.id}.json'
-        with open(temp_file_path, 'w') as input_file:
-            input_file.write('')
+    """Get the config from the managed new device and update the config field."""
+    if (
+        settings.AUTO_SYNC_DEVICE
+        and instance.managed_firmware
+        and instance.active
+    ):
+        if instance.config is None:
+            temp_file_path = f'/tmp/config.{instance.id}.json'
+            with open(temp_file_path, 'w') as input_file:
+                input_file.write('')
 
-        _socket, web_socket = webrepl.get_websocket(
-            instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
+            try:
+                _socket, web_socket = webrepl.get_websocket(
+                    instance.ip_address,
+                    settings.WEBREPL_PORT,
+                    settings.WEBREPL_PASSWORD,
+                )
+                webrepl.get_file(
+                    web_socket, temp_file_path, 'config/config.json'
+                )
+                _socket.close()
+            except OSError as error:
+                raise exceptions.DeviceUnreachableError(
+                    f"Device '{instance.name}' at {instance.ip_address} is unreachable."
+                ) from error
+
+            with open(temp_file_path, 'r') as input_file:
+                device_config = json.loads(input_file.read())
+
+                device_id = str(instance.id)
+                device_config['main']['identifier'] = device_id
+
+                # Ignore the pin config
+                del device_config['pins']
+
+                instance.config = device_config
+
+    elif instance.config is None and not instance.managed_firmware:
+        instance.config = json.loads(
+            json.dumps(settings.DEVICE_DEFAULT_CONFIG).replace(
+                '{identifier}', str(instance.id)
+            )
         )
-        webrepl.get_file(web_socket, temp_file_path, 'config/config.json')
-        _socket.close()
-
-        with open(temp_file_path, 'r') as input_file:
-            device_config = json.loads(input_file.read())
-
-            device_id = str(instance.id)
-            device_config['main']['identifier'] = device_id
-            device_config['mqtt']['client_id'] = device_id
-
-            # Ignore the pin config
-            del device_config['pins']
-
-            instance.config = device_config
 
 
 @receiver(post_save, sender=Device)
 def handle_device_config_update(sender, instance, *args, **kwargs):
-    """Update config on the physical device via webrepl."""
-    temp_file_path = f'/tmp/config.{instance.id}.json'
-    with open(temp_file_path, 'w') as input_file:
-        input_file.write(json.dumps(instance.full_config, indent=4))
+    """Update config on the managed physical device via webrepl."""
+    if (
+        settings.AUTO_SYNC_DEVICE
+        and instance.managed_firmware
+        and instance.active
+    ):
+        temp_file_path = f'/tmp/config.{instance.id}.json'
+        with open(temp_file_path, 'w') as input_file:
+            input_file.write(json.dumps(instance.full_config, indent=4))
 
-    _socket, web_socket = webrepl.get_websocket(
-        instance.ip_address, settings.WEBREPL_PORT, settings.WEBREPL_PASSWORD
-    )
-    webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
-    _socket.close()
+        try:
+            _socket, web_socket = webrepl.get_websocket(
+                instance.ip_address,
+                settings.WEBREPL_PORT,
+                settings.WEBREPL_PASSWORD,
+            )
+            webrepl.put_file(web_socket, temp_file_path, 'config/config.json')
+            _socket.close()
+        except OSError as error:
+            raise exceptions.DeviceUnreachableError(
+                f"Device '{instance.name}' at {instance.ip_address} is unreachable."
+            ) from error

@@ -1,0 +1,91 @@
+services:
+
+  postgis:
+    image: ${DOCKER_POSTGIS_IMAGE}
+    restart: unless-stopped
+    volumes:
+       - iotserver_pg_data:/var/lib/postgresql/data
+    container_name: iotserver-postgis
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${IOTSERVER_POSTGRES_USER}
+      - POSTGRES_PASS=${IOTSERVER_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${IOTSERVER_POSTGRES_DBNAME}
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis
+      - ALLOW_IP_RANGE=0.0.0.0/0
+    networks:
+      services-network:
+        aliases:
+          - postgis
+    healthcheck:
+      test: "pg_isready -h 127.0.0.1 -U ${IOTSERVER_POSTGRES_USER} -d ${IOTSERVER_POSTGRES_DBNAME}"
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  memcached:
+    image: memcached
+    restart: unless-stopped
+    container_name: iotserver-memcached
+    ports:
+      - "11211:11211"
+    networks:
+      services-network:
+        aliases:
+          - memcached
+
+  mqtt:
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto.conf.example:/mosquitto/config/mosquitto.conf:ro
+    container_name: iotserver-mqtt
+    ports:
+      - "1883:1883"
+    networks:
+      services-network:
+        aliases:
+          - mqtt
+
+  api:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./:/usr/src/app
+    container_name: iotserver-api
+    env_file:
+      - .env
+    environment:
+      - IOTSERVER_DJANGO_DEBUG=1
+      - IOTSERVER_GDAL_LIBRARY_PATH=
+      - IOTSERVER_GEOS_LIBRARY_PATH=
+      - IOTSERVER_POSTGRES_HOST=postgis
+      - IOTSERVER_POSTGRES_PASSWORD=${IOTSERVER_POSTGRES_PASSWORD}
+      - IOTSERVER_MQTT_HOST=mqtt
+      - IOTSERVER_MEMCACHED_LOCATION=memcached:11211
+    depends_on:
+      postgis:
+        condition: service_healthy
+    links:
+      - postgis
+      - memcached
+      - mqtt
+    ports:
+      - "8000:8000"
+    networks:
+      services-network:
+        aliases:
+          - api
+    command: ["./entrypoint.sh"]
+
+volumes:
+  iotserver_pg_data:
+    external: true
+
+networks:
+  services-network:
+    name: services-network
+    driver: bridge
