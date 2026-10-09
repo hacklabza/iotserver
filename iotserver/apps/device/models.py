@@ -98,6 +98,12 @@ class Device(models.Model):
     def aggregate_statuses(self):
         return stats.aggregate_statuses(self.statuses)
 
+    @cached_property
+    def process_interval(self):
+        if self.config:
+            return self.config.get('main', {}).get('process_interval', 60)
+        return 60
+
     def mqtt_toggle(self, state: str):
         mqtt.toggle(self.id, str(constants.DEVICE_TOGGLE_STATE[state]))
 
@@ -203,7 +209,10 @@ class DeviceHealth(models.Model):
 
     @cached_property
     def status(self):
-        return self.updated_at > timezone.now() - timezone.timedelta(minutes=1)
+        process_interval = self.device.process_interval
+        return self.updated_at > (
+            timezone.now() - timezone.timedelta(minutes=process_interval / 60)
+        )
 
 
 class SonoffToken(models.Model):
