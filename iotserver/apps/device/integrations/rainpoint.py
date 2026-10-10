@@ -56,7 +56,10 @@ class RainPoint:
             'deviceId': secrets.token_hex(16),
         }
         response = requests.post(
-            url=auth_url, headers=self.request_headers, json=request_data
+            url=auth_url,
+            headers=self.request_headers,
+            json=request_data,
+            timeout=settings.INTEGRATION_TIMEOUT,
         )
         response.raise_for_status()
         auth_data = response.json()['data']
@@ -125,6 +128,7 @@ class RainPoint:
             url=f"{self.config['base_url']}/app/device/getDeviceStatus",
             params={'mid': self.hub_id},
             headers=headers,
+            timeout=settings.INTEGRATION_TIMEOUT,
         )
         response.raise_for_status()
         statuses_data = response.json()['data']

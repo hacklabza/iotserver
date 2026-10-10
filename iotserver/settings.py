@@ -209,6 +209,9 @@ INTEGRATIONS = {
         'api_key': os.environ.get(
             'IOTSERVER_OPENWEATHER_APIKEY', 'openweather-key'
         ),
+        'cache_timeout': int(
+            os.environ.get('IOTSERVER_WEATHER_CACHE_TIMEOUT', 60 * 5)
+        ),
     },
     'solarman': {
         'base_url': os.environ.get(
@@ -247,6 +250,7 @@ INTEGRATIONS = {
         ),
     },
 }
+INTEGRATION_TIMEOUT = int(os.environ.get('IOTSERVER_INTEGRATION_TIMEOUT', 15))
 
 # GIS config
 MAP_WIDGETS = {

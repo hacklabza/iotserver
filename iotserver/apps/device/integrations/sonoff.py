@@ -166,6 +166,7 @@ class Sonoff(object):
             url=self.config['refresh_url'],
             json=request_data,
             headers=self._headers(f'Sign {signed_token}'),
+            timeout=settings.INTEGRATION_TIMEOUT,
         )
         response.raise_for_status()
         data = self._unwrap(response)
@@ -216,6 +217,7 @@ class Sonoff(object):
             url=self.config['device_url'],
             json=request_data,
             headers=self._headers(f'Bearer {access_token}'),
+            timeout=settings.INTEGRATION_TIMEOUT,
         )
         response.raise_for_status()
         self._unwrap(response)

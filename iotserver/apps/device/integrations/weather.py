@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 import requests
 from django.conf import settings
@@ -27,14 +26,18 @@ class Weather(object):
         data for.
     """
 
-    def __init__(self, location: Location) -> None:
+    def __init__(self, location: Location, cache_timeout: int = None) -> None:
         self.location = location
         self.config = settings.INTEGRATIONS['weather']
+        self.cache_timeout = cache_timeout or self.config['cache_timeout']
         self.cache_prefix = f'{self.__module__}.{self.__class__.__name__}'
 
     def _build_url(self) -> str:
         base_url, api_key = self.config['url'], self.config['api_key']
-        return f'{base_url}?lat={self.location.latitude}&lon={self.location.longitude}&exclude=minutely,hourly&units=metric&appid={api_key}'
+        return (
+            f'{base_url}?lat={self.location.latitude}&lon={self.location.longitude}'
+            f'&exclude=minutely,hourly&units=metric&appid={api_key}'
+        )
 
     def _get_weather_data(self) -> dict:
         cache_key = f'{self.cache_prefix}._get_weather_data:{self.location}'
@@ -43,29 +46,30 @@ class Weather(object):
             return cache_result
         else:
             url = self._build_url()
-            response = requests.get(url)
+            response = requests.get(url, timeout=settings.INTEGRATION_TIMEOUT)
             response.raise_for_status()
             weather_data = response.json()
             if weather_data:
-                cache.set(cache_key, weather_data)
+                cache.set(cache_key, weather_data, timeout=self.cache_timeout)
                 return weather_data
 
     @property
-    def current(self) -> Optional[dict]:
+    def current(self) -> dict | None:
         weather_data = self._get_weather_data()
         if weather_data is not None:
             current_weather_data = weather_data['current']
             try:
                 return {
                     'humidity': current_weather_data['humidity'],
-                    'rain': current_weather_data['weather'][0]['main'] == 'Rain',
+                    'rain': current_weather_data['weather'][0]['main']
+                    == 'Rain',
                     'temperature': current_weather_data['temp'],
                 }
             except (KeyError, IndexError):
                 return None
 
     @property
-    def forecast(self) -> Optional[list]:
+    def forecast(self) -> list | None:
         weather_data = self._get_weather_data()
         if weather_data is not None:
             forecast_weather_data = weather_data['daily']
@@ -74,9 +78,9 @@ class Weather(object):
                 try:
                     parsed_forecast_weather_data.append(
                         {
-                            'date': datetime.fromtimestamp(forecast['dt']).strftime(
-                                '%Y-%m-%d'
-                            ),
+                            'date': datetime.fromtimestamp(
+                                forecast['dt']
+                            ).strftime('%Y-%m-%d'),
                             'humidity': forecast.get('humidity', None),
                             'rain': forecast.get('rain', 0) > 0.2,
                             'temperature': {

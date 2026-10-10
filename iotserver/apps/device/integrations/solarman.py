@@ -40,7 +40,11 @@ class Solarman(object):
             'password': self._hash_password(),
         }
 
-        response = requests.post(url=auth_url, json=request_data)
+        response = requests.post(
+            url=auth_url,
+            json=request_data,
+            timeout=settings.INTEGRATION_TIMEOUT,
+        )
         response.raise_for_status()
         auth_data = response.json()
 
@@ -63,6 +67,7 @@ class Solarman(object):
             url=f"{self.config['base_url']}/station/v1.0/realTime",
             json={'stationId': self.station_id},
             headers={'Authorization': f'Bearer {access_token}'},
+            timeout=settings.INTEGRATION_TIMEOUT,
         )
         response.raise_for_status()
         real_time_data = response.json()

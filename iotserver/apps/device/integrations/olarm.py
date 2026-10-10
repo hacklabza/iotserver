@@ -29,7 +29,7 @@ class Olarm(object):
         response = requests.get(
             url=f"{self.config['base_url']}/api/v4/devices/{self.device_id}/events",
             headers={'Authorization': f"Bearer {self.config['api_key']}"},
-            timeout=10,
+            timeout=settings.INTEGRATION_TIMEOUT,
         )
         response.raise_for_status()
         events = response.json().get('data', [])
