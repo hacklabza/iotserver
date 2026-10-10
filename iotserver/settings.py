@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -17,6 +18,49 @@ SECRET_KEY = os.environ.get('IOTSERVER_SECRET_KEY', 'insecure-secretkey')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('IOTSERVER_DJANGO_DEBUG', '1') == '1'
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'formatter': 'verbose',
+            'level': logging.DEBUG if DEBUG == '1' else logging.INFO,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': logging.DEBUG if DEBUG == '1' else logging.INFO,
+            'propagate': False,
+        },
+        'mqtt': {
+            'handlers': ['console', 'file'],
+            'level': logging.DEBUG,
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+os.makedirs(BASE_DIR / 'logs', exist_ok=True)
 
 ALLOWED_HOSTS = ['*']
 

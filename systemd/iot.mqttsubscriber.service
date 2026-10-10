@@ -7,6 +7,8 @@ User=pi
 Group=pi
 WorkingDirectory=/home/pi/iotserver
 Environment="PATH=/home/pi/.local/bin:$PATH"
+Environment="IOTSERVER_LOGS_DIR=/home/pi/iotserver/logs"
+Environment="LOGGING_DJANGO_LEVEL=DEBUG:mqtt.DEBUG"
 ExecStart=/home/pi/.local/bin/poetry run manage.py mqtt
 
 [Install]

@@ -7,6 +7,7 @@ User=pi
 Group=pi
 WorkingDirectory=/home/pi/iotserver
 Environment="PATH=/home/pi/.local/bin:$PATH"
+Environment="IOTSERVER_LOGS_DIR=/home/pi/iotserver/logs"
 ExecStart=/home/pi/.local/bin/poetry run /home/pi/iotserver/manage.py rules
 
 [Install]
