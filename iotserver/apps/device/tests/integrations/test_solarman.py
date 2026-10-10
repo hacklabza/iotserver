@@ -8,6 +8,7 @@ from iotserver.apps.device.integrations.solarman import Solarman
 @pytest.fixture(autouse=True)
 def mock_settings(mocker):
     mock = mocker.patch('iotserver.apps.device.integrations.solarman.settings')
+    mock.INTEGRATION_TIMEOUT = (15, 30)
     mock.INTEGRATIONS = {
         'solarman': {
             'base_url': 'https://example.com',
@@ -62,6 +63,7 @@ class TestSolarmanIntegration(object):
                 'email': 'user@example.com',
                 'password': hashlib.sha256(b'password').hexdigest(),
             },
+            timeout=(15, 30),
         )
         mock_requests.auth_response.raise_for_status.assert_called_once_with()
 
@@ -103,6 +105,7 @@ class TestSolarmanIntegration(object):
             url='https://example.com/station/v1.0/realTime',
             json={'stationId': 3208097},
             headers={'Authorization': 'Bearer access-token'},
+            timeout=(15, 30),
         )
         mock_requests.real_time_response.raise_for_status.assert_called_once_with()
 

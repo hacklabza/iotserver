@@ -17,6 +17,7 @@ from iotserver.apps.device.models import SonoffToken
 @pytest.fixture(autouse=True)
 def mock_settings(mocker):
     mock = mocker.patch('iotserver.apps.device.integrations.sonoff.settings')
+    mock.INTEGRATION_TIMEOUT = (15, 30)
     mock.INTEGRATIONS = {
         'sonoff': {
             'app_id': 'app-id',
@@ -178,6 +179,7 @@ class TestSonoffIntegration(object):
                 'Authorization': 'Bearer access-token',
                 'Content-Type': 'application/json',
             },
+            timeout=(15, 30),
         )
         mock_requests.response.raise_for_status.assert_called_once_with()
 

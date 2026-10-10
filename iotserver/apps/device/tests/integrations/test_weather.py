@@ -6,10 +6,12 @@ from iotserver.apps.device.integrations.weather import Location, Weather
 @pytest.fixture(autouse=True)
 def mock_settings(mocker):
     mock = mocker.patch('iotserver.apps.device.integrations.weather.settings')
+    mock.INTEGRATION_TIMEOUT = (15, 30)
     mock.INTEGRATIONS = {
         'weather': {
             'url': 'https://api.openweathermap.org/data/3.0/onecall',
             'api_key': 'openweather-key',
+            'cache_timeout': 3600,
         }
     }
     return mock
@@ -95,11 +97,14 @@ class TestWeatherIntegration(object):
         mock_requests.response.json.return_value = weather_data
 
         assert weather._get_weather_data() == weather_data
-        mock_requests.get.assert_called_once_with(weather._build_url())
+        mock_requests.get.assert_called_once_with(
+            weather._build_url(), timeout=(15, 30)
+        )
         mock_requests.response.raise_for_status.assert_called_once_with()
         mock_cache.set.assert_called_once_with(
             f'{weather.cache_prefix}._get_weather_data:{weather.location}',
             weather_data,
+            timeout=3600,
         )
 
     def test_empty_weather_data_is_not_cached(

@@ -10,6 +10,7 @@ from iotserver.apps.device.integrations.olarm import (
 @pytest.fixture(autouse=True)
 def mock_settings(mocker):
     mock = mocker.patch('iotserver.apps.device.integrations.olarm.settings')
+    mock.INTEGRATION_TIMEOUT = (15, 30)
     mock.INTEGRATIONS = {
         'olarm': {
             'base_url': 'https://example.com',
@@ -61,7 +62,7 @@ class TestOlarmIntegration(object):
         mock_requests.get.assert_called_once_with(
             url='https://example.com/api/v4/devices/device-id/events',
             headers={'Authorization': 'Bearer api-key'},
-            timeout=10,
+            timeout=(15, 30),
         )
         mock_requests.get.return_value.raise_for_status.assert_called_once_with()
 

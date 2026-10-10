@@ -11,6 +11,7 @@ def client(mocker):
     settings = mocker.patch(
         'iotserver.apps.device.integrations.rainpoint.settings'
     )
+    settings.INTEGRATION_TIMEOUT = (15, 30)
     settings.INTEGRATIONS = {
         'rainpoint': {
             'base_url': 'https://example.com',
@@ -51,6 +52,7 @@ def test_statuses_uses_reading_map(mocker, mock_cache, custom_mapping):
     settings = mocker.patch(
         'iotserver.apps.device.integrations.rainpoint.settings'
     )
+    settings.INTEGRATION_TIMEOUT = (15, 30)
     settings.INTEGRATIONS = {
         'rainpoint': {
             'base_url': 'https://example.com',
@@ -100,6 +102,7 @@ def test_statuses_uses_reading_map(mocker, mock_cache, custom_mapping):
         url='https://example.com/app/device/getDeviceStatus',
         params={'mid': '361481'},
         headers={'lang': 'en', 'appCode': '2', 'auth': 'token'},
+        timeout=(15, 30),
     )
     mock_cache.set.assert_called_once_with(
         f'{rainpoint.cache_prefix}.statuses:361481', expected, timeout=60
@@ -148,11 +151,13 @@ def test_statuses(client, mock_cache, mock_request):
             'password': hashlib.md5(b'password').hexdigest(),
             'deviceId': mock_request.post.call_args.kwargs['json']['deviceId'],
         },
+        timeout=(15, 30),
     )
     mock_request.get.assert_called_once_with(
         url='https://example.com/app/device/getDeviceStatus',
         params={'mid': '361481'},
         headers={'lang': 'en', 'appCode': '2', 'auth': 'token'},
+        timeout=(15, 30),
     )
     mock_request.post.return_value.raise_for_status.assert_called_once_with()
     mock_request.get.return_value.raise_for_status.assert_called_once_with()
@@ -180,21 +185,24 @@ def test_cached_statuses(client, mock_cache, mock_request):
     mock_request.post.assert_not_called()
 
 
-def test_cached_authentication_token(client, mock_cache, mock_request):
+def test_authentication_does_not_use_cache(client, mock_cache, mock_request):
     mock_cache.get.return_value = 'old-token'
-    assert client._authenticate() == 'old-token'
-    mock_request.post.assert_not_called()
+    assert client._authenticate() == 'token'
+    assert client._authenticate() == 'token'
+    assert mock_request.post.call_count == 2
+    mock_cache.get.assert_not_called()
+    mock_cache.set.assert_not_called()
 
 
-def test_authentication_token_cache_lifetime(client, mock_cache, mock_request):
+def test_authentication_returns_token_without_caching(
+    client, mock_cache, mock_request
+):
     mock_request.post.return_value.json.return_value = {
         'code': 0,
         'data': {'token': 'new', 'tokenExpired': 3600},
     }
     assert client._authenticate() == 'new'
-    mock_cache.set.assert_called_once_with(
-        f'{client.cache_prefix}.auth', 'new', timeout=3600
-    )
+    mock_cache.set.assert_not_called()
 
 
 @pytest.mark.parametrize('method', ['GET', 'POST'])
