@@ -41,11 +41,6 @@ class RainPoint:
         }
 
     def _authenticate(self):
-        cache_key = f'{self.cache_prefix}.auth'
-        cached_auth_token = cache.get(cache_key)
-        if cached_auth_token:
-            return cached_auth_token
-
         auth_url = f"{self.config['base_url']}/auth/basic/app/login"
         request_data = {
             'areaCode': self.config['area_code'],
@@ -63,9 +58,6 @@ class RainPoint:
         )
         response.raise_for_status()
         auth_data = response.json()['data']
-
-        token_timeout = int(auth_data['tokenExpired'])
-        cache.set(cache_key, auth_data['token'], timeout=token_timeout)
 
         return auth_data['token']
 

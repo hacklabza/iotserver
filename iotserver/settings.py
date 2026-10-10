@@ -235,7 +235,7 @@ INTEGRATIONS = {
         'app_code': os.environ.get('IOTSERVER_RAINPOINT_APP_CODE', '2'),
         'area_code': os.environ.get('IOTSERVER_RAINPOINT_AREA_CODE', '27'),
         'cache_timeout': int(
-            os.environ.get('IOTSERVER_RAINPOINT_CACHE_TIMEOUT', 60 * 5)
+            os.environ.get('IOTSERVER_RAINPOINT_CACHE_TIMEOUT', 60 * 14)
         ),
     },
     'olarm': {
