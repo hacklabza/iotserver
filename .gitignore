@@ -29,6 +29,10 @@ ve/
 /media/downloads/
 /static/
 
+# logs
+*.log
+logs/
+
 # misc
 *.swp
 *.pyc

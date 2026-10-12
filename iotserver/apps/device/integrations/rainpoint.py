@@ -1,5 +1,4 @@
 import hashlib
-import secrets
 
 import requests
 from django.conf import settings
@@ -48,7 +47,7 @@ class RainPoint:
             'password': hashlib.md5(
                 self.config['password'].encode()
             ).hexdigest(),
-            'deviceId': secrets.token_hex(16),
+            'deviceId': self.config['device_id'],
         }
         response = requests.post(
             url=auth_url,

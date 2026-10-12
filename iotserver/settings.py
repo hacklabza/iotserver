@@ -281,6 +281,7 @@ INTEGRATIONS = {
         'cache_timeout': int(
             os.environ.get('IOTSERVER_RAINPOINT_CACHE_TIMEOUT', 60 * 14)
         ),
+        'device_id': os.environ.get('IOTSERVER_RAINPOINT_DEVICE_ID', None),
     },
     'olarm': {
         'base_url': os.environ.get(
