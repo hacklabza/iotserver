@@ -19,11 +19,12 @@ def client(mocker):
             'email': 'api@example.com',
             'password': 'password',
             'area_code': '27',
-            'hub_id': '361481',
+            'hub_id': '123456',
             'cache_timeout': 60,
+            'device_id': 'CF67A120-41F8-4AAC-9A83-ECFA4AAEE75F',
         }
     }
-    return RainPoint('361481')
+    return RainPoint('123456')
 
 
 @pytest.fixture
@@ -60,7 +61,7 @@ def test_statuses_uses_reading_map(mocker, mock_cache, custom_mapping):
             'cache_timeout': 60,
         }
     }
-    rainpoint = RainPoint('361481')
+    rainpoint = RainPoint('123456')
     mocker.patch.object(rainpoint, '_authenticate', return_value='token')
     request = mocker.patch(
         'iotserver.apps.device.integrations.rainpoint.requests.get'
@@ -100,12 +101,12 @@ def test_statuses_uses_reading_map(mocker, mock_cache, custom_mapping):
     assert rainpoint.statuses == expected
     request.assert_called_once_with(
         url='https://example.com/app/device/getDeviceStatus',
-        params={'mid': '361481'},
+        params={'mid': '123456'},
         headers={'lang': 'en', 'appCode': '2', 'auth': 'token'},
         timeout=(15, 30),
     )
     mock_cache.set.assert_called_once_with(
-        f'{rainpoint.cache_prefix}.statuses:361481', expected, timeout=60
+        f'{rainpoint.cache_prefix}.statuses:123456', expected, timeout=60
     )
 
 
@@ -155,7 +156,7 @@ def test_statuses(client, mock_cache, mock_request):
     )
     mock_request.get.assert_called_once_with(
         url='https://example.com/app/device/getDeviceStatus',
-        params={'mid': '361481'},
+        params={'mid': '123456'},
         headers={'lang': 'en', 'appCode': '2', 'auth': 'token'},
         timeout=(15, 30),
     )
@@ -167,7 +168,7 @@ def test_statuses(client, mock_cache, mock_request):
 @pytest.mark.parametrize('app_code', ['1', '2'])
 def test_configured_app_code(client, mock_cache, mock_request, app_code):
     client.config['app_code'] = app_code
-    client = RainPoint('361481')
+    client = RainPoint('123456')
     client._authenticate()
 
     assert mock_request.post.call_args.kwargs['headers']['appCode'] == app_code
@@ -179,7 +180,7 @@ def test_cached_statuses(client, mock_cache, mock_request):
     mock_cache.get.return_value = statuses
     assert client.statuses == statuses
     mock_cache.get.assert_called_once_with(
-        f'{client.cache_prefix}.statuses:361481'
+        f'{client.cache_prefix}.statuses:123456'
     )
     mock_request.get.assert_not_called()
     mock_request.post.assert_not_called()
@@ -280,14 +281,14 @@ def test_decode_sensor_extended_stream(client):
 
 
 def test_custom_cache_timeout(client, mock_cache, mock_request):
-    client = RainPoint('361481', cache_timeout=30)
+    client = RainPoint('123456', cache_timeout=30)
     assert client.statuses == {}
     assert mock_cache.set.call_args.kwargs['timeout'] == 30
 
 
 @pytest.mark.parametrize('cache_timeout', [None, 0])
 def test_default_cache_timeout(client, mock_cache, mock_request, cache_timeout):
-    client = RainPoint('361481', cache_timeout=cache_timeout)
+    client = RainPoint('123456', cache_timeout=cache_timeout)
     cached_statuses = {'temperature': 21.0}
     mock_cache.get.return_value = cached_statuses
 
@@ -300,7 +301,7 @@ def test_default_cache_timeout(client, mock_cache, mock_request, cache_timeout):
 
 def test_zero_cache_timeout_from_settings(client):
     client.config['cache_timeout'] = 0
-    assert RainPoint('361481').cache_timeout == 0
+    assert RainPoint('123456').cache_timeout == 0
 
 
 @pytest.mark.parametrize('status', [None, {}, {'subDeviceStatus': []}])
